@@ -3,15 +3,6 @@ import * as THREE from './node_modules/three/build/three.module.js';
 const canvas = document.querySelector('canvas');
 const renderer = new THREE.WebGLRenderer({ canvas });
 
-const angles = [
-  [Math.PI/5, Math.PI/4, 0],
-  [Math.PI/5, (3*Math.PI)/4, 0],
-  [Math.PI/5, (5*Math.PI)/4, 0],
-  [Math.PI/5, (7*Math.PI)/4, 0],
-  [Math.PI/5, (7*Math.PI)/4, Math.PI/2],
-]
-
-
 const fov = 60;
 const aspect = 2;
 const near = 0.1;
@@ -56,8 +47,11 @@ for (let i = 0; i < 3; i++) {
   cubes.push(layer);
 }
 
-const axesHelper = new THREE.AxesHelper(5);
-scene.add(axesHelper);
+const fillerGeometry = new THREE.BoxGeometry(boxWidth * 3, boxHeight * 3, boxDepth * 3);
+const fillerMaterial = new THREE.MeshBasicMaterial({ color: 0x000000 });
+
+const fillerCube = new THREE.Mesh(fillerGeometry, fillerMaterial);
+scene.add(fillerCube);
 
 canvas.addEventListener('mousemove', (event) => {
   if (event.buttons === 1) {
