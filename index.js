@@ -54,12 +54,13 @@ const fillerCube = new THREE.Mesh(fillerGeometry, fillerMaterial);
 scene.add(fillerCube);
 
 canvas.addEventListener('mousemove', (event) => {
-  if (event.buttons === 1) {
+  if (event.buttons === 2) {
     cameraPole.rotateX(event.movementY * -.003)
     cameraPole.rotateY(event.movementX * -.003);
   }
 });
 canvas.addEventListener('wheel', (event) => {
+  event.preventDefault();
   if (event.deltaY < 0) {
     camera.zoom *= 1.1;
     camera.updateProjectionMatrix();
