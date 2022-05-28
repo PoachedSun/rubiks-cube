@@ -23,9 +23,6 @@ camera.position.z = 2;
 const scene = new THREE.Scene();
 scene.background = new THREE.Color('white');
 
-const axesHelper = new THREE.AxesHelper(5);
-scene.add(axesHelper);
-
 const cameraPole = new THREE.Object3D;
 scene.add(cameraPole);
 cameraPole.add(camera);
@@ -44,6 +41,8 @@ const materials = hexes.map((hex) => new THREE.MeshBasicMaterial({ color: hex })
 
 const material = new THREE.MeshBasicMaterial({ vertexColors: true });
 const cube = new THREE.Mesh(geometry, materials);
+const axesHelper = new THREE.AxesHelper(5);
+cube.add(axesHelper);
 
 
 scene.add(cube);
@@ -54,66 +53,27 @@ const light = new THREE.DirectionalLight(color, intensity);
 light.position.set(-1, 2, 4);
 camera.add(light);
 
+
 canvas.addEventListener('mousemove', (event) => {
   if (event.buttons === 1) {
+    cameraPole.rotateX(event.movementY * -.003)
+    cameraPole.rotateY(event.movementX * -.003);
   }
 });
-
-let rotatingX, rotatingY, rotatingZ = false;
-let deltaYRotate = 0;
-let targets = [0, 0, 0];
-let currentAngle = 0;
-let targeting = false;
-document.querySelector('#x-button').addEventListener('click', () => targets[0]++);
-document.querySelector('#y-button').addEventListener('click', () => targets[1]++);
-document.querySelector('#z-button').addEventListener('click', () => targets[2]++);
-
-document.querySelector('#left-button').addEventListener('click', () => {
-  targets[1] += 1;
+canvas.addEventListener('wheel', (event) => {
+  if (event.deltaY < 0) {
+    camera.zoom *= 1.1;
+    camera.updateProjectionMatrix();
+  } else {
+    camera.zoom /= 1.1;
+    camera.updateProjectionMatrix();
+  }
 });
-document.querySelector('#right-button').addEventListener('click', () => {
-  targets[2] += 1;
-}); // deltaYRotate -= Math.PI / 2);
-
-const xDisplay = document.querySelector('#x-display');
-const yDisplay = document.querySelector('#y-display');
-const zDisplay = document.querySelector('#z-display');
 
 const rotationSpeed = 0.05;
 
 requestAnimationFrame(render);
 function render(time) {
-  const targets2 = [Math.PI/5 + ((targets[0] * Math.PI) / 2), ((targets[1] * Math.PI)/2) + (Math.PI / 4), (targets[2] * Math.PI) / 2];
-  const rotations = ['x', 'y', 'z'];
-  for (let i = 0; i < rotations.length; i++) {
-    if (cube.rotation[rotations[i]] < targets2[i]) {
-      cube.rotation[rotations[i]] += rotationSpeed;
-      if (cube.rotation[rotations[i]] > targets2[i]) {
-        cube.rotation[rotations[i]] = targets2[i];
-      }
-    } else if (cube.rotation[rotations[i]] > targets2[i]) {
-      cube.rotation[rotations[i]] -= rotationSpeed;
-      if (cube.rotation[rotations[i]] < targets2[i]) {
-        cube.rotation[rotations[i]] = targets2[i];
-      }
-    }
-  }
-
-  xDisplay.innerHTML = (cube.rotation.x).toPrecision(2);
-  yDisplay.innerHTML = (cube.rotation.y).toPrecision(2);
-  zDisplay.innerHTML = (cube.rotation.z).toPrecision(2);
-
   renderer.render(scene, camera);
   requestAnimationFrame(render);
-}
-
-function reduceRotations(o) {
-  ['x', 'y', 'z'].forEach((dimension) => {
-    if (o.rotation[dimension] > 2 * Math.PI) {
-      o.rotation[dimension] -= (2 * Math.PI);
-    }
-    if (o.rotation[dimension] < 0) {
-      o.rotation[dimension] += (2 * Math.PI);
-    }
-  });
 }
