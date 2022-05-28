@@ -69,9 +69,31 @@ canvas.addEventListener('wheel', (event) => {
     camera.updateProjectionMatrix();
   }
 });
+canvas.addEventListener('mousedown', (event) => {
+  const rect = canvas.getBoundingClientRect();
+  pick(
+    {
+      x: ((event.clientX - rect.left) / rect.width) * 2 - 1,
+      y: ((event.clientY - rect.top) / rect.height) * -2 + 1,
+    },
+    scene,
+    camera,
+  );
+})
 
 requestAnimationFrame(render);
 function render(time) {
   renderer.render(scene, camera);
   requestAnimationFrame(render);
+}
+
+const raycaster = new THREE.Raycaster();
+let pickedObject;
+
+function pick(normalizedPosition, scene, camera) {
+  raycaster.setFromCamera(normalizedPosition, camera);
+  const intersectedObjects = raycaster.intersectObjects(scene.children);
+  if (intersectedObjects.length) {
+    pickedObject = intersectedObjects[0].object;
+  }
 }
