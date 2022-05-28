@@ -15,10 +15,10 @@ const angles = [
 const fov = 60;
 const aspect = 2;
 const near = 0.1;
-const far = 5;
+const far = 30;
 const camera = new THREE.PerspectiveCamera(fov, aspect, near, far);
 
-camera.position.z = 2;
+camera.position.z = 15;
 
 const scene = new THREE.Scene();
 scene.background = new THREE.Color('white');
@@ -32,27 +32,32 @@ const boxHeight = 1;
 const boxDepth = 1;
 const geometry = new THREE.BoxGeometry(boxWidth, boxHeight, boxDepth);
 
-const positionAttribute = geometry.getAttribute('position');
 //               red       orange    green     blue      yellow     white
 const hexes = [0xfc0f03, 0xff6200, 0x0ba313, 0x0a0dbf, 0xf8fc03, 0xbbbbbb];
 
 const materials = hexes.map((hex) => new THREE.MeshBasicMaterial({ color: hex }));
 
+const cubes = [];
+for (let i = 0; i < 3; i++) {
+  const layer = [];
+  for (let j = 0; j < 3; j++) {
+    const row = [];
+    for (let k = 0; k < 3; k++) {
+      row.push(new THREE.Mesh(geometry, materials));
+      const cube = new THREE.Mesh(geometry, materials);
+      cube.position.y = (1 - i) * boxHeight * 1.1;
+      cube.position.z = (1 - j) * boxDepth * 1.1;
+      cube.position.x = (1 - k) * boxWidth * 1.1;
+      scene.add(cube);
+      row.push(cube);
+    }
+    layer.push(row);
+  }
+  cubes.push(layer);
+}
 
-const material = new THREE.MeshBasicMaterial({ vertexColors: true });
-const cube = new THREE.Mesh(geometry, materials);
 const axesHelper = new THREE.AxesHelper(5);
-cube.add(axesHelper);
-
-
-scene.add(cube);
-
-const color = 0xFFFFFF;
-const intensity = 1;
-const light = new THREE.DirectionalLight(color, intensity);
-light.position.set(-1, 2, 4);
-camera.add(light);
-
+scene.add(axesHelper);
 
 canvas.addEventListener('mousemove', (event) => {
   if (event.buttons === 1) {
@@ -69,8 +74,6 @@ canvas.addEventListener('wheel', (event) => {
     camera.updateProjectionMatrix();
   }
 });
-
-const rotationSpeed = 0.05;
 
 requestAnimationFrame(render);
 function render(time) {
