@@ -60,29 +60,56 @@ for (let i = 0; i < 3; i++) {
 
       scene.add(cube);
       row.push(cube);
-
-      if (i === 0) {
-        faces.top.push(cube);
-      } else if (i === 2) {
-        faces.bottom.push(cube);
-      }
-
-      if (j === 0) {
-        faces.front.push(cube);
-      } else if (j === 2) {
-        faces.back.push(cube);
-      }
-
-      if (k === 0) {
-        faces.right.push(cube);
-      } else if (k === 2) {
-        faces.left.push(cube);
-      }
     }
     layer.push(row);
   }
   cubes.push(layer);
 }
+
+function roundPositions () {
+  cubes.forEach((layer) => {
+    layer.forEach((row) => {
+      row.forEach((cube) => {
+        cube.position.x = Math.round(cube.position.x);
+        cube.position.y = Math.round(cube.position.y);
+        cube.position.z = Math.round(cube.position.z);
+      });
+    });
+  });
+}
+function assignFaces () {
+  faces.front = [];
+  faces.back = [];
+  faces.top = [];
+  faces.bottom = [];
+  faces.left = [];
+  faces.right = [];
+  cubes.forEach((layer) => {
+    layer.forEach((row) => {
+      row.forEach((cube) => {
+        if (cube.position.y < 0) {
+          faces.bottom.push(cube);
+        } else if (cube.position.y > 0) {
+          faces.top.push(cube);
+        }
+
+        if (cube.position.z < 0) {
+          faces.back.push(cube);
+        } else if (cube.position.z > 0) {
+          faces.front.push(cube);
+        }
+
+        if (cube.position.x < 0) {
+          faces.left.push(cube);
+        } else if (cube.position.x > 0 ){
+          faces.right.push(cube);
+        }
+      });
+    });
+  });
+}
+
+assignFaces();
 
 let dragging = false;
 let pickedObject;
@@ -171,6 +198,10 @@ function pick(normalizedPosition, scene, camera) {
   }
 }
 
+document.querySelector('#front-left-button').addEventListener('click', () => rotateFrontLeft());
+document.querySelector('#front-right-button').addEventListener('click', () => rotateFrontRight());
+document.querySelector('#right-left-button').addEventListener('click', () => rotateRightLeft());
+
 function rotateFrontStep(angle) {
   faces.front.forEach((cube) => {
     cube.rotation.z += angle;
@@ -191,6 +222,8 @@ function rotateFrontLeft(steps) {
     counter++;
     if (counter === stepCount) {
       clearInterval(int1);
+      roundPositions();
+      assignFaces();
     }
   }, 40);
 }
@@ -205,6 +238,8 @@ function rotateFrontRight(steps) {
     counter++;
     if (counter === stepCount) {
       clearInterval(int1);
+      roundPositions();
+      assignFaces();
     }
   }, 40);
 }
@@ -212,12 +247,6 @@ function rotateFrontRight(steps) {
 function rotateRightStep(angle) {
   faces.right.forEach((cube) => {
     cube.rotation.x += angle;
-    // const newZ = (cube.position.y * Math.sin(angle)) - (cube.position.z * Math.cos(angle));
-    // const newY = (cube.position.z * Math.sin(angle)) + (cube.position.y * Math.cos(angle));
-    
-    // cube.position.y = newY;
-    // cube.position.z = newZ;
-
     const newZ = (cube.position.z * Math.sin(angle)) - (cube.position.y * Math.cos(angle));
     const newY = (cube.position.y * Math.sin(angle)) + (cube.position.z * Math.cos(angle));
     cube.position.z = newZ;
@@ -235,6 +264,8 @@ function rotateRightLeft(steps) {
     counter++;
     if (counter === stepCount) {
       clearInterval(int1);
+      roundPositions();
+      assignFaces();
     }
   }, 40);
 }
