@@ -8,14 +8,14 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/PoachedSun/rubks-cube.git"
+    "url": "git+https://github.com/PoachedSun/rubiks-cube.git"
   },
   "author": "PoachedSun",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/PoachedSun/rubks-cube/issues"
+    "url": "https://github.com/PoachedSun/rubiks-cube/issues"
   },
-  "homepage": "https://github.com/PoachedSun/rubks-cube#readme",
+  "homepage": "https://github.com/PoachedSun/rubiks-cube#readme",
   "dependencies": {
     "three": "^0.141.0"
   }
