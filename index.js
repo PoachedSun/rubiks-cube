@@ -206,33 +206,104 @@ function pick(normalizedPosition, scene, camera) {
 
 
 class CubeData {
-  front = [[undefined, undefined, undefined], [undefined, undefined, undefined], [undefined, undefined, undefined]];
-  back = [[undefined, undefined, undefined], [undefined, undefined, undefined], [undefined, undefined, undefined]];
-  top = [[undefined, undefined, undefined], [undefined, undefined, undefined], [undefined, undefined, undefined]];
-  bottom = [[undefined, undefined, undefined], [undefined, undefined, undefined], [undefined, undefined, undefined]];
-  left = [[undefined, undefined, undefined], [undefined, undefined, undefined], [undefined, undefined, undefined]];
-  right = [[undefined, undefined, undefined], [undefined, undefined, undefined], [undefined, undefined, undefined]];
+  faces = {
+    front: {
+      cubeData: [[undefined, undefined, undefined], [undefined, undefined, undefined], [undefined, undefined, undefined]],
+      rotationAxis: 'z',
+    },
+    back: {
+      cubeData: [[undefined, undefined, undefined], [undefined, undefined, undefined], [undefined, undefined, undefined]],
+      rotationAxis: 'z',
+    },
+    top: {
+      cubeData: [[undefined, undefined, undefined], [undefined, undefined, undefined], [undefined, undefined, undefined]],
+      rotationAxis: 'y',
+    },
+    bottom: {
+      cubeData: [[undefined, undefined, undefined], [undefined, undefined, undefined], [undefined, undefined, undefined]],
+      rotationAxis: 'y',
+    },
+    left: {
+      cubeData: [[undefined, undefined, undefined], [undefined, undefined, undefined], [undefined, undefined, undefined]],
+      rotationAxis: 'x',
+    },
+    right: {
+      cubeData: [[undefined, undefined, undefined], [undefined, undefined, undefined], [undefined, undefined, undefined]],
+      rotationAxis: 'x',
+    },
+  }
   isRotating = false;
   constructor(cubes) {
     cubes.forEach((cube) => {
       if (cube.position.y < 0) {
-        this.bottom[-cube.position.z + 1][cube.position.x + 1] = { cube, colorValue: 0 };
+        this.faces.bottom.cubeData[-cube.position.z + 1][cube.position.x + 1] = { cube, colorValue: 0 };
       } else if (cube.position.y > 0) {
-        this.top[cube.position.z + 1][cube.position.x + 1] = { cube, colorValue: 1 };
+        this.faces.top.cubeData[cube.position.z + 1][cube.position.x + 1] = { cube, colorValue: 1 };
       }
 
       if (cube.position.z < 0) {
-        this.back[cube.position.y + 1][cube.position.x + 1] = { cube, colorValue: 2 };
+        this.faces.back.cubeData[cube.position.y + 1][cube.position.x + 1] = { cube, colorValue: 2 };
       } else if (cube.position.z > 0) {
-        this.front[-cube.position.y + 1][cube.position.x + 1] = { cube, colorValue: 3 };
+        this.faces.front.cubeData[-cube.position.y + 1][cube.position.x + 1] = { cube, colorValue: 3 };
       }
 
       if (cube.position.x < 0) {
-        this.left[-cube.position.y + 1][cube.position.z + 1] = { cube, colorValue: 4 };
+        this.faces.left.cubeData[-cube.position.y + 1][cube.position.z + 1] = { cube, colorValue: 4 };
       } else if (cube.position.x > 0) {
-        this.right[-cube.position.y + 1][-cube.position.z + 1] = { cube, colorValue: 5 };
+        this.faces.right.cubeData[-cube.position.y + 1][-cube.position.z + 1] = { cube, colorValue: 5 };
       }
     });
+    this.addCubesToRotate();
+    this.attachListeners();
+  }
+
+  addCubesToRotate() {
+    this.faces.front.cubesToRotate = [
+      [this.faces.top.cubeData[2][0], this.faces.top.cubeData[2][1], this.faces.top.cubeData[2][2]],
+      [this.faces.right.cubeData[0][0], this.faces.right.cubeData[1][0], this.faces.right.cubeData[2][0]],
+      [this.faces.bottom.cubeData[0][2], this.faces.bottom.cubeData[0][1], this.faces.bottom.cubeData[0][0]],
+      [this.faces.left.cubeData[2][2], this.faces.left.cubeData[1][2], this.faces.left.cubeData[0][2]],
+    ];
+    this.faces.back.cubesToRotate = [
+      [this.faces.top.cubeData[0][2], this.faces.top.cubeData[0][1], this.faces.top.cubeData[0][0]],
+      [this.faces.left.cubeData[0][0], this.faces.left.cubeData[1][0], this.faces.left.cubeData[2][0]],
+      [this.faces.bottom.cubeData[2][0], this.faces.bottom.cubeData[2][1], this.faces.bottom.cubeData[2][2]],
+      [this.faces.right.cubeData[2][2], this.faces.right.cubeData[1][2], this.faces.right.cubeData[0][2]],
+    ];
+
+    this.faces.left.cubesToRotate = [
+      [this.faces.top.cubeData[0][0], this.faces.top.cubeData[1][0], this.faces.top.cubeData[2][0]],
+      [this.faces.front.cubeData[0][0], this.faces.front.cubeData[1][0], this.faces.front.cubeData[2][0]],
+      [this.faces.bottom.cubeData[0][0], this.faces.bottom.cubeData[1][0], this.faces.bottom.cubeData[2][0]],
+      [this.faces.back.cubeData[0][0], this.faces.back.cubeData[1][0], this.faces.back.cubeData[2][0]],
+    ];
+    this.faces.right.cubesToRotate = [
+      [this.faces.top.cubeData[0][2], this.faces.top.cubeData[1][2], this.faces.top.cubeData[2][2]],
+      [this.faces.back.cubeData[0][2], this.faces.back.cubeData[1][2], this.faces.back.cubeData[2][2]],
+      [this.faces.bottom.cubeData[0][2], this.faces.bottom.cubeData[1][2], this.faces.bottom.cubeData[2][2]],
+      [this.faces.front.cubeData[0][2], this.faces.front.cubeData[1][2], this.faces.front.cubeData[2][2]],
+    ]
+
+    this.faces.top.cubesToRotate = [
+      [this.faces.front.cubeData[0][2], this.faces.front.cubeData[0][1], this.faces.front.cubeData[0][0]],
+      [this.faces.left.cubeData[0][2], this.faces.left.cubeData[0][1], this.faces.left.cubeData[0][0]],
+      [this.faces.back.cubeData[2][0], this.faces.back.cubeData[2][1], this.faces.back.cubeData[2][2]],
+      [this.faces.right.cubeData[0][2], this.faces.right.cubeData[0][1], this.faces.right.cubeData[0][0]],
+    ]
+    this.faces.bottom.cubesToRotate = [
+      [this.faces.front.cubeData[2][0], this.faces.front.cubeData[2][1], this.faces.front.cubeData[2][2]],
+      [this.faces.right.cubeData[2][0], this.faces.right.cubeData[2][1], this.faces.right.cubeData[2][2]],
+      [this.faces.back.cubeData[0][2], this.faces.back.cubeData[0][1], this.faces.back.cubeData[0][0]],
+      [this.faces.left.cubeData[2][0], this.faces.left.cubeData[2][1], this.faces.left.cubeData[2][2]],
+    ]
+  }
+  
+  attachListeners() {
+    document.querySelector('#right-left-button').addEventListener('click', () => this.rotateFace(this.faces.right, -1));
+    document.querySelector('#right-right-button').addEventListener('click', () => this.rotateFace(this.faces.right, 1));
+
+    document.querySelector('#front-left-button').addEventListener('click', () => this.rotateFace(this.faces.front, -1));
+    document.querySelector('#front-right-button').addEventListener('click', () => this.rotateFace(this.faces.front, 1));
   }
 
   removeFace(face) {
@@ -257,32 +328,32 @@ class CubeData {
     cubes.forEach((cube) => {
       cube.material = [blackMat, blackMat, blackMat, blackMat, blackMat, blackMat];
     });
-    this.front.forEach((row) => {
+    this.faces.front.cubeData.forEach((row) => {
       row.forEach((cubeData) => {
         cubeData.cube.material[MaterialOrder.FRONT] = materials[cubeData.colorValue];
       });
     });
-    this.back.forEach((row) => {
+    this.faces.back.cubeData.forEach((row) => {
       row.forEach((cubeData) => {
         cubeData.cube.material[MaterialOrder.BACK] = materials[cubeData.colorValue];
       });
     });
-    this.left.forEach((row) => {
+    this.faces.left.cubeData.forEach((row) => {
       row.forEach((cubeData) => {
         cubeData.cube.material[MaterialOrder.LEFT] = materials[cubeData.colorValue];
       });
     });
-    this.right.forEach((row) => {
+    this.faces.right.cubeData.forEach((row) => {
       row.forEach((cubeData) => {
         cubeData.cube.material[MaterialOrder.RIGHT] = materials[cubeData.colorValue];
       });
     });
-    this.top.forEach((row) => {
+    this.faces.top.cubeData.forEach((row) => {
       row.forEach((cubeData) => {
         cubeData.cube.material[MaterialOrder.TOP] = materials[cubeData.colorValue];
       });
     });
-    this.bottom.forEach((row) => {
+    this.faces.bottom.cubeData.forEach((row) => {
       row.forEach((cubeData) => {
         cubeData.cube.material[MaterialOrder.BOTTOM] = materials[cubeData.colorValue];
       });
@@ -398,72 +469,22 @@ class CubeData {
     face[0][2].colorValue = colorValues[2][2];
   }
 
-  rotateRightRight() {
+  rotateFace(face, direction) {
     if (this.isRotating) {
       return;
     }
-
-    this.rotateFaceRight(this.right);
-
-    const cubesToRotate = [
-      [this.back[0][2], this.back[1][2], this.back[2][2]],
-      [this.bottom[0][2], this.bottom[1][2], this.bottom[2][2]],
-      [this.front[0][2], this.front[1][2], this.front[2][2]],
-      [this.top[0][2], this.top[1][2], this.top[2][2]],
-    ];
-
-    this.rotateColorValues(cubesToRotate);
-
-    this.rotateCubesOnAxis(this.getCubeArrayFromFace(this.right), 'x', -1);
-  }
-
-  rotateRightLeft() {
-    if (this.isRotating) {
-      return;
-    }
-
-    this.rotateFaceLeft(this.right);
-
-    const cubesToRotate = [
-      [this.top[0][2], this.top[1][2], this.top[2][2]],
-      [this.front[0][2], this.front[1][2], this.front[2][2]],
-      [this.bottom[0][2], this.bottom[1][2], this.bottom[2][2]],
-      [this.back[0][2], this.back[1][2], this.back[2][2]],
-    ];
-
-    this.rotateColorValues(cubesToRotate);
-  
-    this.rotateCubesOnAxis(this.getCubeArrayFromFace(this.right), 'x', 1);
-  }
-
-  rotateFront(direction) {
-    if (this.isRotating) {
-      return;
-    }
-    const cubesToRotate = [
-      [this.top[2][0], this.top[2][1], this.top[2][2]],
-      [this.right[0][0], this.right[1][0], this.right[2][0]],
-      [this.bottom[0][2], this.bottom[0][1], this.bottom[0][0]],
-      [this.left[2][2], this.left[1][2], this.left[0][2]],
-    ];
 
     if (direction === 1) {
-      this.rotateFaceRight(this.front);
-      this.rotateColorValues(cubesToRotate);
-      this.rotateCubesOnAxis(this.getCubeArrayFromFace(this.front), 'z', -1);
+      this.rotateFaceRight(face.cubeData);
+      this.rotateColorValues(face.cubesToRotate.slice());
+      this.rotateCubesOnAxis(this.getCubeArrayFromFace(face.cubeData), face.rotationAxis, -1);
     } else if (direction === -1) {
-      this.rotateFaceLeft(this.front);
-      this.rotateColorValues(cubesToRotate.reverse());
-      this.rotateCubesOnAxis(this.getCubeArrayFromFace(this.front), 'z', 1);
+      this.rotateFaceLeft(face.cubeData);
+      this.rotateColorValues(face.cubesToRotate.slice().reverse());
+      this.rotateCubesOnAxis(this.getCubeArrayFromFace(face.cubeData), face.rotationAxis, 1);
     }
   }
 }
 
 const cd = new CubeData(cubes);
 cd.colorFaces();
-
-document.querySelector('#right-right-button').addEventListener('click', () => cd.rotateRightRight());
-document.querySelector('#right-left-button').addEventListener('click', () => cd.rotateRightLeft());
-
-document.querySelector('#front-left-button').addEventListener('click', () => cd.rotateFront(-1));
-document.querySelector('#front-right-button').addEventListener('click', () => cd.rotateFront(1));
