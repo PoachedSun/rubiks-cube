@@ -203,8 +203,7 @@ function pick(normalizedPosition, scene, camera) {
   }
 }
 
-document.querySelector('#front-left-button').addEventListener('click', () => rotateFrontLeft());
-document.querySelector('#front-right-button').addEventListener('click', () => rotateFrontRight());
+
 
 class CubeData {
   front = [[undefined, undefined, undefined], [undefined, undefined, undefined], [undefined, undefined, undefined]];
@@ -335,54 +334,85 @@ class CubeData {
     }, speed);
   }
 
+  rotateFaceRight(face) {
+    const colorValues = [[undefined, undefined, undefined], [undefined, undefined, undefined], [undefined, undefined, undefined]];
+
+    colorValues[2][0] = face[2][0].colorValue;
+    colorValues[1][0] = face[1][0].colorValue;
+    colorValues[0][0] = face[0][0].colorValue;
+    colorValues[2][1] = face[2][1].colorValue;
+    colorValues[1][1] = face[1][1].colorValue;
+    colorValues[0][1] = face[0][1].colorValue;
+    colorValues[2][2] = face[2][2].colorValue;
+    colorValues[1][2] = face[1][2].colorValue;
+    colorValues[0][2] = face[0][2].colorValue;
+
+    face[0][0].colorValue = colorValues[2][0];
+    face[0][1].colorValue = colorValues[1][0];
+    face[0][2].colorValue = colorValues[0][0];
+    face[1][0].colorValue = colorValues[2][1];
+    face[1][1].colorValue = colorValues[1][1];
+    face[1][2].colorValue = colorValues[0][1];
+    face[2][0].colorValue = colorValues[2][2];
+    face[2][1].colorValue = colorValues[1][2];
+    face[2][2].colorValue = colorValues[0][2];
+  }
+
+  /*
+    Takes a 4x3 array of cube data. The color values in each will be shuffled down (values in row 0 -> row 1, row 1 -> row 2, ..., row 4 -> row 1).
+  */
+  rotateColorValues(cubeArray) {
+    let previousRow = cubeArray[cubeArray.length].map((cubeData) => cubeData.colorValue);
+    let currentRow;
+    for (let i = 0; i < cubeArray.length; i++) {
+      currentRow = cubeArray[i];
+      const temp = previousRow;
+      previousRow = currentRow.map((cubeData) => cubeData.colorValue);
+      for (let j = 0; j < cubeArray[i].length; j++) {
+        cubeArray[i][j].colorValue = temp[j];
+      }
+    }
+  }
+
+  rotateFaceLeft(face) { 
+    const colorValues = [[undefined, undefined, undefined], [undefined, undefined, undefined], [undefined, undefined, undefined]];
+
+    colorValues[2][0] = face[2][0].colorValue;
+    colorValues[1][0] = face[1][0].colorValue;
+    colorValues[0][0] = face[0][0].colorValue;
+    colorValues[2][1] = face[2][1].colorValue;
+    colorValues[1][1] = face[1][1].colorValue;
+    colorValues[0][1] = face[0][1].colorValue;
+    colorValues[2][2] = face[2][2].colorValue;
+    colorValues[1][2] = face[1][2].colorValue;
+    colorValues[0][2] = face[0][2].colorValue;
+
+    face[2][0].colorValue = colorValues[0][0];
+    face[1][0].colorValue = colorValues[0][1];
+    face[0][0].colorValue = colorValues[0][2];
+    face[2][1].colorValue = colorValues[1][0];
+    face[1][1].colorValue = colorValues[1][1];
+    face[0][1].colorValue = colorValues[1][2];
+    face[2][2].colorValue = colorValues[2][0];
+    face[1][2].colorValue = colorValues[2][1];
+    face[0][2].colorValue = colorValues[2][2];
+  }
+
   rotateRightRight() {
     if (this.isRotating) {
       return;
     }
-    const right = [[undefined, undefined, undefined], [undefined, undefined, undefined], [undefined, undefined, undefined]];
-    const top = [[undefined, undefined, undefined], [undefined, undefined, undefined], [undefined, undefined, undefined]];
 
-    right[2][0] = this.right[2][0].colorValue
-    right[1][0] = this.right[1][0].colorValue
-    right[0][0] = this.right[0][0].colorValue
-    right[2][1] = this.right[2][1].colorValue
-    right[1][1] = this.right[1][1].colorValue
-    right[0][1] = this.right[0][1].colorValue
-    right[2][2] = this.right[2][2].colorValue
-    right[1][2] = this.right[1][2].colorValue
-    right[0][2] = this.right[0][2].colorValue
+    this.rotateFaceRight(this.right);
 
-    this.right[0][0].colorValue = right[2][0]
-    this.right[0][1].colorValue = right[1][0]
-    this.right[0][2].colorValue = right[0][0]
+    const cubesToRotate = [
+      [this.top[0][2], this.top[1][2], this.top[2][2]],
+      [this.front[0][2], this.front[1][2], this.front[2][2]],
+      [this.bottom[0][2], this.front[1][2], this.front[2][2]],
+      [this.back[0][2], this.back[1][2], this.front[2][2]],
+    ];
 
-    this.right[1][0].colorValue = right[2][1]
-    this.right[1][1].colorValue = right[1][1]
-    this.right[1][2].colorValue = right[0][1]
-
-    this.right[2][0].colorValue = right[2][2]
-    this.right[2][1].colorValue = right[1][2]
-    this.right[2][2].colorValue = right[0][2]
-
-    top[0][2] = this.top[0][2].colorValue;
-    top[1][2] = this.top[1][2].colorValue;
-    top[2][2] = this.top[2][2].colorValue;
-    this.top[0][2].colorValue = this.front[0][2].colorValue
-    this.top[1][2].colorValue = this.front[1][2].colorValue
-    this.top[2][2].colorValue = this.front[2][2].colorValue
-
-
-    this.front[0][2].colorValue = this.bottom[0][2].colorValue
-    this.front[1][2].colorValue = this.bottom[1][2].colorValue
-    this.front[2][2].colorValue = this.bottom[2][2].colorValue
-
-    this.bottom[0][2].colorValue = this.back[0][2].colorValue
-    this.bottom[1][2].colorValue = this.back[1][2].colorValue
-    this.bottom[2][2].colorValue = this.back[2][2].colorValue
-    
-    this.back[0][2].colorValue = top[0][2]
-    this.back[1][2].colorValue = top[1][2]
-    this.back[2][2].colorValue = top[2][2]
+    this.rotateColorValues(cubesToRotate);
 
     this.rotateCubesOnAxis(this.getCubeArrayFromFace(this.right), 'x', -1);
   }
@@ -391,30 +421,10 @@ class CubeData {
     if (this.isRotating) {
       return;
     }
-    const right = [[undefined, undefined, undefined], [undefined, undefined, undefined], [undefined, undefined, undefined]];
+
+    this.rotateFaceLeft(this.right);
+
     const front = [[undefined, undefined, undefined], [undefined, undefined, undefined], [undefined, undefined, undefined]];
-
-    right[2][0] = this.right[2][0].colorValue
-    right[1][0] = this.right[1][0].colorValue
-    right[0][0] = this.right[0][0].colorValue
-    right[2][1] = this.right[2][1].colorValue
-    right[1][1] = this.right[1][1].colorValue
-    right[0][1] = this.right[0][1].colorValue
-    right[2][2] = this.right[2][2].colorValue
-    right[1][2] = this.right[1][2].colorValue
-    right[0][2] = this.right[0][2].colorValue
-
-    this.right[2][0].colorValue = right[0][0]
-    this.right[1][0].colorValue = right[0][1]
-    this.right[0][0].colorValue = right[0][2]
-
-    this.right[2][1].colorValue = right[1][0]
-    this.right[1][1].colorValue = right[1][1]
-    this.right[0][1].colorValue = right[1][2]
-
-    this.right[2][2].colorValue = right[2][0]
-    this.right[1][2].colorValue = right[2][1]
-    this.right[0][2].colorValue = right[2][2]
 
     front[0][2] = this.front[0][2].colorValue;
     front[1][2] = this.front[1][2].colorValue;
@@ -437,6 +447,68 @@ class CubeData {
   
     this.rotateCubesOnAxis(this.getCubeArrayFromFace(this.right), 'x', 1);
   }
+
+  rotateFrontRight() {
+    if (this.isRotating) {
+      return;
+    }
+
+    this.rotateFaceRight(this.front);
+
+    const top = [[undefined, undefined, undefined], [undefined, undefined, undefined], [undefined, undefined, undefined]];
+    top[2][0] = this.top[2][0].colorValue;
+    top[2][1] = this.top[2][1].colorValue;
+    top[2][2] = this.top[2][2].colorValue;
+
+    this.top[2][0].colorValue = this.left[2][2].colorValue;
+    this.top[2][1].colorValue = this.left[1][2].colorValue;
+    this.top[2][2].colorValue = this.left[0][2].colorValue;
+
+    this.left[0][2].colorValue = this.bottom[0][0].colorValue;
+    this.left[1][2].colorValue = this.bottom[0][1].colorValue;
+    this.left[2][2].colorValue = this.bottom[0][2].colorValue;
+
+    this.bottom[0][0].colorValue = this.right[2][0].colorValue;
+    this.bottom[0][1].colorValue = this.right[1][0].colorValue;
+    this.bottom[0][2].colorValue = this.right[0][0].colorValue;
+
+    this.right[0][0].colorValue = top[2][0];
+    this.right[1][0].colorValue = top[2][1];
+    this.right[2][0].colorValue = top[2][2];
+  
+    this.rotateCubesOnAxis(this.getCubeArrayFromFace(this.front), 'z', -1);
+  }
+
+  rotateFrontLeft() {
+    if (this.isRotating) {
+      return;
+    }
+
+    this.rotateFaceRight(this.front);
+
+    const left = [[undefined, undefined, undefined], [undefined, undefined, undefined], [undefined, undefined, undefined]];
+    left[0][2] = this.left[0][2].colorValue;
+    left[1][2] = this.left[1][2].colorValue;
+    left[2][2] = this.left[2][2].colorValue;
+
+    this.left[2][2].colorValue = this.top[2][0].colorValue;
+    this.left[1][2].colorValue = this.top[2][1].colorValue;
+    this.left[0][2].colorValue = this.top[2][2].colorValue;
+
+    this.top[2][0].colorValue = this.right[0][0].colorValue;
+    this.top[2][1].colorValue = this.right[1][0].colorValue;
+    this.top[2][2].colorValue = this.right[2][0].colorValue;
+
+    this.right[2][0].colorValue = this.bottom[0][0].colorValue;
+    this.right[1][0].colorValue = this.bottom[0][1].colorValue;
+    this.right[0][0].colorValue = this.bottom[0][2].colorValue;
+
+    this.bottom[0][0].colorValue = left[0][2];
+    this.bottom[0][1].colorValue = left[1][2];
+    this.bottom[0][2].colorValue = left[2][2];
+  
+    this.rotateCubesOnAxis(this.getCubeArrayFromFace(this.front), 'z', 1);
+  }
 }
 
 const cd = new CubeData(cubes);
@@ -444,3 +516,6 @@ cd.colorFaces();
 
 document.querySelector('#right-right-button').addEventListener('click', () => cd.rotateRightRight());
 document.querySelector('#right-left-button').addEventListener('click', () => cd.rotateRightLeft());
+
+document.querySelector('#front-left-button').addEventListener('click', () => cd.rotateFrontLeft());
+document.querySelector('#front-right-button').addEventListener('click', () => cd.rotateFrontRight());
