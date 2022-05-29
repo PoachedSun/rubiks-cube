@@ -238,6 +238,34 @@ class CubeData {
       directionMultiplier: -1,
     },
   }
+  rotationMethodParams = [
+    [this.faces.left, -1],
+    [this.faces.left, 1],
+    [this.faces.right, -1],
+    [this.faces.right, 1],
+    [this.faces.front, -1],
+    [this.faces.front, 1],
+    [this.faces.back, -1],
+    [this.faces.back, 1],
+    [this.faces.top, -1],
+    [this.faces.top, 1],
+    [this.faces.bottom, -1],
+    [this.faces.bottom, 1],
+  ];
+  rotationMethodParamsOpposites = [
+    [this.faces.left, 1],
+    [this.faces.left, -1],
+    [this.faces.right, 1],
+    [this.faces.right, -1],
+    [this.faces.front, 1],
+    [this.faces.front, -1],
+    [this.faces.back, 1],
+    [this.faces.back, -1],
+    [this.faces.top, 1],
+    [this.faces.top, -1],
+    [this.faces.bottom, 1],
+    [this.faces.bottom, -1],
+  ]
   isRotating = false;
   constructor(cubes) {
     cubes.forEach((cube) => {
@@ -322,6 +350,8 @@ class CubeData {
 
     document.querySelector('#bottom-left-button').addEventListener('click', () => this.rotateFace(this.faces.bottom, -1));
     document.querySelector('#bottom-right-button').addEventListener('click', () => this.rotateFace(this.faces.bottom, 1));
+
+    document.querySelector('#scramble-button').addEventListener('click', () => this.scramble());
   }
 
   removeFace(face) {
@@ -386,7 +416,7 @@ class CubeData {
     stepCount (optional): Describes the number of steps in the animation. Default 8.
     speed (optional): The delay between steps in ms. Default 40.
   */
-  rotateCubesOnAxis(cubes, axis, direction, stepCount, speed) {
+  rotateCubesOnAxis(cubes, axis, direction, stepCount, speed, cb) {
     this.isRotating = true;
     stepCount = stepCount ? stepCount : 8;
     speed = speed ? speed : 40;
@@ -419,6 +449,9 @@ class CubeData {
         roundPositions();
         this.isRotating = false;
         this.colorFaces();
+        if (cb) {
+          cb();
+        }
       }
     }, speed);
   }
@@ -487,7 +520,7 @@ class CubeData {
     face[0][2].colorValue = colorValues[2][2];
   }
 
-  rotateFace(face, direction) {
+  rotateFace(face, direction, stepCount, speed, cb) {
     if (this.isRotating) {
       return;
     }
@@ -495,12 +528,36 @@ class CubeData {
     if (direction === 1) {
       this.rotateFaceRight(face.cubeData);
       this.rotateColorValues(face.cubesToRotate.slice());
-      this.rotateCubesOnAxis(this.getCubeArrayFromFace(face.cubeData), face.rotationAxis, direction * face.directionMultiplier);
+      this.rotateCubesOnAxis(this.getCubeArrayFromFace(face.cubeData), face.rotationAxis, direction * face.directionMultiplier, stepCount, speed, cb);
     } else if (direction === -1) {
       this.rotateFaceLeft(face.cubeData);
       this.rotateColorValues(face.cubesToRotate.slice().reverse());
-      this.rotateCubesOnAxis(this.getCubeArrayFromFace(face.cubeData), face.rotationAxis, direction * face.directionMultiplier);
+      this.rotateCubesOnAxis(this.getCubeArrayFromFace(face.cubeData), face.rotationAxis, direction * face.directionMultiplier, stepCount, speed, cb);
     }
+  }
+
+  getRandomRotationParams() {
+    return this.rotationMethodParams[Math.floor(Math.random() * this.rotationMethodParams.length)];
+  }
+
+  rotateRandomFace(stepCount, speed, cb) {
+    const rotationParams = this.getRandomRotationParams();
+    this.rotateFace(rotationParams[0], rotationParams[1], stepCount, speed, cb);
+  }
+  scramble() {
+    const speed = 20;
+    const stepCount = 8;
+    const turns = Math.floor(Math.random() * 20) + 30;
+
+    let counter = 0;
+    const cb = () => {
+      counter++;
+      if (counter < turns) {
+        this.rotateRandomFace(stepCount, speed, cb);
+      }
+    }
+    const rotationParams = this.getRandomRotationParams();
+    this.rotateFace(rotationParams[0], rotationParams[1], stepCount, speed, cb);
   }
 }
 
