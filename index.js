@@ -210,26 +210,32 @@ class CubeData {
     front: {
       cubeData: [[undefined, undefined, undefined], [undefined, undefined, undefined], [undefined, undefined, undefined]],
       rotationAxis: 'z',
+      directionMultiplier: -1,
     },
     back: {
       cubeData: [[undefined, undefined, undefined], [undefined, undefined, undefined], [undefined, undefined, undefined]],
       rotationAxis: 'z',
+      directionMultiplier: 1,
     },
     top: {
       cubeData: [[undefined, undefined, undefined], [undefined, undefined, undefined], [undefined, undefined, undefined]],
       rotationAxis: 'y',
+      directionMultiplier: -1,
     },
     bottom: {
       cubeData: [[undefined, undefined, undefined], [undefined, undefined, undefined], [undefined, undefined, undefined]],
       rotationAxis: 'y',
+      directionMultiplier: 1,
     },
     left: {
       cubeData: [[undefined, undefined, undefined], [undefined, undefined, undefined], [undefined, undefined, undefined]],
       rotationAxis: 'x',
+      directionMultiplier: 1,
     },
     right: {
       cubeData: [[undefined, undefined, undefined], [undefined, undefined, undefined], [undefined, undefined, undefined]],
       rotationAxis: 'x',
+      directionMultiplier: -1,
     },
   }
   isRotating = false;
@@ -299,11 +305,23 @@ class CubeData {
   }
   
   attachListeners() {
+    document.querySelector('#left-left-button').addEventListener('click', () => this.rotateFace(this.faces.left, -1));
+    document.querySelector('#left-right-button').addEventListener('click', () => this.rotateFace(this.faces.left, 1));
+
     document.querySelector('#right-left-button').addEventListener('click', () => this.rotateFace(this.faces.right, -1));
     document.querySelector('#right-right-button').addEventListener('click', () => this.rotateFace(this.faces.right, 1));
 
     document.querySelector('#front-left-button').addEventListener('click', () => this.rotateFace(this.faces.front, -1));
     document.querySelector('#front-right-button').addEventListener('click', () => this.rotateFace(this.faces.front, 1));
+
+    document.querySelector('#back-left-button').addEventListener('click', () => this.rotateFace(this.faces.back, -1));
+    document.querySelector('#back-right-button').addEventListener('click', () => this.rotateFace(this.faces.back, 1));
+
+    document.querySelector('#top-left-button').addEventListener('click', () => this.rotateFace(this.faces.top, -1));
+    document.querySelector('#top-right-button').addEventListener('click', () => this.rotateFace(this.faces.top, 1));
+
+    document.querySelector('#bottom-left-button').addEventListener('click', () => this.rotateFace(this.faces.bottom, -1));
+    document.querySelector('#bottom-right-button').addEventListener('click', () => this.rotateFace(this.faces.bottom, 1));
   }
 
   removeFace(face) {
@@ -477,11 +495,11 @@ class CubeData {
     if (direction === 1) {
       this.rotateFaceRight(face.cubeData);
       this.rotateColorValues(face.cubesToRotate.slice());
-      this.rotateCubesOnAxis(this.getCubeArrayFromFace(face.cubeData), face.rotationAxis, -1);
+      this.rotateCubesOnAxis(this.getCubeArrayFromFace(face.cubeData), face.rotationAxis, direction * face.directionMultiplier);
     } else if (direction === -1) {
       this.rotateFaceLeft(face.cubeData);
       this.rotateColorValues(face.cubesToRotate.slice().reverse());
-      this.rotateCubesOnAxis(this.getCubeArrayFromFace(face.cubeData), face.rotationAxis, 1);
+      this.rotateCubesOnAxis(this.getCubeArrayFromFace(face.cubeData), face.rotationAxis, direction * face.directionMultiplier);
     }
   }
 }
