@@ -240,33 +240,6 @@ export default class Cube {
   }
   
   attachListeners() {
-    document.querySelector('#left-left-button').addEventListener('click', () => this.rotateFace(this.faces.left, -1));
-    document.querySelector('#left-right-button').addEventListener('click', () => this.rotateFace(this.faces.left, 1));
-
-    document.querySelector('#middle-left-right-left-button').addEventListener('click', () => this.rotateFace(this.faces.middleLeftRight, -1));
-    document.querySelector('#middle-left-right-right-button').addEventListener('click', () => this.rotateFace(this.faces.middleLeftRight, 1));
-
-    document.querySelector('#right-left-button').addEventListener('click', () => this.rotateFace(this.faces.right, -1));
-    document.querySelector('#right-right-button').addEventListener('click', () => this.rotateFace(this.faces.right, 1));
-
-    document.querySelector('#front-left-button').addEventListener('click', () => this.rotateFace(this.faces.front, -1));
-    document.querySelector('#front-right-button').addEventListener('click', () => this.rotateFace(this.faces.front, 1));
-
-    document.querySelector('#middle-front-back-left-button').addEventListener('click', () => this.rotateFace(this.faces.middleFrontBack, -1));
-    document.querySelector('#middle-front-back-right-button').addEventListener('click', () => this.rotateFace(this.faces.middleFrontBack, 1));
-
-    document.querySelector('#back-left-button').addEventListener('click', () => this.rotateFace(this.faces.back, -1));
-    document.querySelector('#back-right-button').addEventListener('click', () => this.rotateFace(this.faces.back, 1));
-
-    document.querySelector('#top-left-button').addEventListener('click', () => this.rotateFace(this.faces.top, -1));
-    document.querySelector('#top-right-button').addEventListener('click', () => this.rotateFace(this.faces.top, 1));
-
-    document.querySelector('#middle-top-bottom-left-button').addEventListener('click', () => this.rotateFace(this.faces.middleTopBottom, -1));
-    document.querySelector('#middle-top-bottom-right-button').addEventListener('click', () => this.rotateFace(this.faces.middleTopBottom, 1));
-
-    document.querySelector('#bottom-left-button').addEventListener('click', () => this.rotateFace(this.faces.bottom, -1));
-    document.querySelector('#bottom-right-button').addEventListener('click', () => this.rotateFace(this.faces.bottom, 1));
-
     document.querySelector('#scramble-button').addEventListener('click', () => this.scramble());
     document.querySelector('#solve-button').addEventListener('click', () => this.undoToPreviousSolve());
 
