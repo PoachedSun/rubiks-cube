@@ -18,103 +18,7 @@ const cameraPole = new THREE.Object3D;
 scene.add(cameraPole);
 cameraPole.add(camera);
 
-const boxWidth = 1;
-const boxHeight = 1;
-const boxDepth = 1;
-const geometry = new THREE.BoxGeometry(boxWidth, boxHeight, boxDepth);
 
-
-const redMat = new THREE.MeshBasicMaterial({
-  color: 0xfc0f03,
-  polygonOffset: true,
-  polygonOffsetFactor: 1,
-  polygonOffsetUnits: 1,
-});
-const orangeMat = new THREE.MeshBasicMaterial({
-  color: 0xff6200,
-  polygonOffset: true,
-  polygonOffsetFactor: 1,
-  polygonOffsetUnits: 1,
-});
-const greenMat = new THREE.MeshBasicMaterial({
-  color: 0x0ba313,
-  polygonOffset: true,
-  polygonOffsetFactor: 1,
-  polygonOffsetUnits: 1,
-});
-const blueMat = new THREE.MeshBasicMaterial({
-  color: 0x0a0dbf,
-  polygonOffset: true,
-  polygonOffsetFactor: 1,
-  polygonOffsetUnits: 1,
-});
-const yellowMat = new THREE.MeshBasicMaterial({
-  color: 0xf8fc03,
-  polygonOffset: true,
-  polygonOffsetFactor: 1,
-  polygonOffsetUnits: 1,
-});
-const whiteMat = new THREE.MeshBasicMaterial({
-  color: 0xbbbbbb,
-  polygonOffset: true,
-  polygonOffsetFactor: 1,
-  polygonOffsetUnits: 1,
-});
-
-const blackMat = new THREE.MeshBasicMaterial({
-  color: 0x000000,
-  polygonOffset: true,
-  polygonOffsetFactor: 1,
-  polygonOffsetUnits: 1,
-});
-
-const materials = [
-  orangeMat,
-  redMat,
-  blueMat,
-  greenMat,
-  yellowMat,
-  whiteMat,
-]
-
-const cubes = [];
-for (let i = 0; i < 3; i++) {
-  for (let j = 0; j < 3; j++) {
-    for (let k = 0; k < 3; k++) {
-      const defaultMaterials = [blackMat, blackMat, blackMat, blackMat, blackMat, blackMat];
-      const cube = new THREE.Mesh(geometry, defaultMaterials);
-      cube.position.y = (1 - i) * boxHeight;
-      cube.position.z = (1 - j) * boxDepth;
-      cube.position.x = (1 - k) * boxWidth;
-
-      const geo = new THREE.EdgesGeometry(cube.geometry);
-      const mat = new THREE.LineBasicMaterial({ color: 0x000000 });
-      const wireframe = new THREE.LineSegments(geo, mat);
-      cube.add(wireframe);
-
-      scene.add(cube);
-      cubes.push(cube);
-    }
-  }
-}
-
-const MaterialOrder = {
-  RIGHT: 0,
-  LEFT: 1,
-  TOP: 2,
-  BOTTOM: 3,
-  FRONT: 4,
-  BACK: 5,
-}
-
-function roundPositions () {
-  cubes.forEach((cube) => {
-    cube.position.x = Math.round(cube.position.x);
-    cube.position.y = Math.round(cube.position.y);
-    cube.position.z = Math.round(cube.position.z);
-    cube.rotation.set(0, 0, 0);
-  });
-}
 
 let dragging = false;
 let pickedObject;
@@ -205,7 +109,7 @@ function pick(normalizedPosition, scene, camera) {
 
 
 
-class CubeData {
+class Cube {
   faces = {
     front: {
       cubeData: [[undefined, undefined, undefined], [undefined, undefined, undefined], [undefined, undefined, undefined]],
@@ -268,7 +172,11 @@ class CubeData {
   ];
   stepsSinceLastSolved = [];
   isRotating = false;
-  constructor(cubes) {
+  materials = [];
+
+  constructor() {
+    this.generateMaterials();
+    const cubes = this.generateCubes();
     cubes.forEach((cube) => {
       if (cube.position.y < 0) {
         this.faces.bottom.cubeData[-cube.position.z + 1][cube.position.x + 1] = { cube, colorValue: 0 };
@@ -290,6 +198,91 @@ class CubeData {
     });
     this.addCubesToRotate();
     this.attachListeners();
+    this.colorFaces();
+  }
+
+  generateCubes() {
+    const cubes = [];
+    for (let i = 0; i < 3; i++) {
+      for (let j = 0; j < 3; j++) {
+        for (let k = 0; k < 3; k++) {
+          const boxWidth = 1;
+          const boxHeight = 1;
+          const boxDepth = 1;
+          const geometry = new THREE.BoxGeometry(boxWidth, boxHeight, boxDepth);
+          const blackMat = this.materials[this.materials.length - 1];
+          const defaultMaterials = [blackMat, blackMat, blackMat, blackMat, blackMat, blackMat];
+          const cube = new THREE.Mesh(geometry, defaultMaterials);
+          cube.position.y = (1 - i) * boxHeight;
+          cube.position.z = (1 - j) * boxDepth;
+          cube.position.x = (1 - k) * boxWidth;
+    
+          const geo = new THREE.EdgesGeometry(cube.geometry);
+          const mat = new THREE.LineBasicMaterial({ color: 0x000000 });
+          const wireframe = new THREE.LineSegments(geo, mat);
+          cube.add(wireframe);
+    
+          scene.add(cube);
+          cubes.push(cube);
+        }
+      }
+    }
+    return cubes;
+  }
+
+  generateMaterials() {
+    const redMat = new THREE.MeshBasicMaterial({
+      color: 0xfc0f03,
+      polygonOffset: true,
+      polygonOffsetFactor: 1,
+      polygonOffsetUnits: 1,
+    });
+    const orangeMat = new THREE.MeshBasicMaterial({
+      color: 0xff6200,
+      polygonOffset: true,
+      polygonOffsetFactor: 1,
+      polygonOffsetUnits: 1,
+    });
+    const greenMat = new THREE.MeshBasicMaterial({
+      color: 0x0ba313,
+      polygonOffset: true,
+      polygonOffsetFactor: 1,
+      polygonOffsetUnits: 1,
+    });
+    const blueMat = new THREE.MeshBasicMaterial({
+      color: 0x0a0dbf,
+      polygonOffset: true,
+      polygonOffsetFactor: 1,
+      polygonOffsetUnits: 1,
+    });
+    const yellowMat = new THREE.MeshBasicMaterial({
+      color: 0xf8fc03,
+      polygonOffset: true,
+      polygonOffsetFactor: 1,
+      polygonOffsetUnits: 1,
+    });
+    const whiteMat = new THREE.MeshBasicMaterial({
+      color: 0xbbbbbb,
+      polygonOffset: true,
+      polygonOffsetFactor: 1,
+      polygonOffsetUnits: 1,
+    });
+
+    const blackMat = new THREE.MeshBasicMaterial({
+      color: 0x000000,
+      polygonOffset: true,
+      polygonOffsetFactor: 1,
+      polygonOffsetUnits: 1,
+    });
+    this.materials.push(...[
+      orangeMat,
+      redMat,
+      blueMat,
+      greenMat,
+      yellowMat,
+      whiteMat,
+      blackMat,
+    ]);
   }
 
   addCubesToRotate() {
@@ -375,37 +368,42 @@ class CubeData {
   }
 
   colorFaces () {
-    cubes.forEach((cube) => {
-      cube.material = [blackMat, blackMat, blackMat, blackMat, blackMat, blackMat];
-    });
+    const MaterialOrder = {
+      RIGHT: 0,
+      LEFT: 1,
+      TOP: 2,
+      BOTTOM: 3,
+      FRONT: 4,
+      BACK: 5,
+    }
     this.faces.front.cubeData.forEach((row) => {
       row.forEach((cubeData) => {
-        cubeData.cube.material[MaterialOrder.FRONT] = materials[cubeData.colorValue];
+        cubeData.cube.material[MaterialOrder.FRONT] = this.materials[cubeData.colorValue];
       });
     });
     this.faces.back.cubeData.forEach((row) => {
       row.forEach((cubeData) => {
-        cubeData.cube.material[MaterialOrder.BACK] = materials[cubeData.colorValue];
+        cubeData.cube.material[MaterialOrder.BACK] = this.materials[cubeData.colorValue];
       });
     });
     this.faces.left.cubeData.forEach((row) => {
       row.forEach((cubeData) => {
-        cubeData.cube.material[MaterialOrder.LEFT] = materials[cubeData.colorValue];
+        cubeData.cube.material[MaterialOrder.LEFT] = this.materials[cubeData.colorValue];
       });
     });
     this.faces.right.cubeData.forEach((row) => {
       row.forEach((cubeData) => {
-        cubeData.cube.material[MaterialOrder.RIGHT] = materials[cubeData.colorValue];
+        cubeData.cube.material[MaterialOrder.RIGHT] = this.materials[cubeData.colorValue];
       });
     });
     this.faces.top.cubeData.forEach((row) => {
       row.forEach((cubeData) => {
-        cubeData.cube.material[MaterialOrder.TOP] = materials[cubeData.colorValue];
+        cubeData.cube.material[MaterialOrder.TOP] = this.materials[cubeData.colorValue];
       });
     });
     this.faces.bottom.cubeData.forEach((row) => {
       row.forEach((cubeData) => {
-        cubeData.cube.material[MaterialOrder.BOTTOM] = materials[cubeData.colorValue];
+        cubeData.cube.material[MaterialOrder.BOTTOM] = this.materials[cubeData.colorValue];
       });
     });
   }
@@ -448,7 +446,6 @@ class CubeData {
           scene.add(cube);
         });
         clearInterval(interval);
-        roundPositions();
         this.isRotating = false;
         this.colorFaces();
         if (cb) {
@@ -602,5 +599,4 @@ class CubeData {
   }
 }
 
-const cd = new CubeData(cubes);
-cd.colorFaces();
+const cd = new Cube();
