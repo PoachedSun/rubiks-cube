@@ -265,7 +265,8 @@ class CubeData {
     [this.faces.top, -1],
     [this.faces.bottom, 1],
     [this.faces.bottom, -1],
-  ]
+  ];
+  stepsSinceLastSolved = [];
   isRotating = false;
   constructor(cubes) {
     cubes.forEach((cube) => {
@@ -352,6 +353,7 @@ class CubeData {
     document.querySelector('#bottom-right-button').addEventListener('click', () => this.rotateFace(this.faces.bottom, 1));
 
     document.querySelector('#scramble-button').addEventListener('click', () => this.scramble());
+    document.querySelector('#solve-button').addEventListener('click', () => this.undoToPreviousSolve());
   }
 
   removeFace(face) {
@@ -534,6 +536,14 @@ class CubeData {
       this.rotateColorValues(face.cubesToRotate.slice().reverse());
       this.rotateCubesOnAxis(this.getCubeArrayFromFace(face.cubeData), face.rotationAxis, direction * face.directionMultiplier, stepCount, speed, cb);
     }
+
+    if (this.isSolved()) {
+      document.querySelector('h5').hidden = false;
+      this.stepsSinceLastSolved = [];
+    } else {
+      document.querySelector('h5').hidden = true;
+      this.stepsSinceLastSolved.push(this.rotationMethodParams.findIndex((params) => params[0] === face && params[1] === direction));
+    }
   }
 
   getRandomRotationParams() {
@@ -544,6 +554,7 @@ class CubeData {
     const rotationParams = this.getRandomRotationParams();
     this.rotateFace(rotationParams[0], rotationParams[1], stepCount, speed, cb);
   }
+
   scramble() {
     const speed = 20;
     const stepCount = 8;
@@ -558,6 +569,36 @@ class CubeData {
     }
     const rotationParams = this.getRandomRotationParams();
     this.rotateFace(rotationParams[0], rotationParams[1], stepCount, speed, cb);
+  }
+
+  /* Checks if each cube on each face has the same color. */
+  isSolved() {
+    for (const prop in this.faces) {
+      let colorVal = this.faces[prop].cubeData[0][0].colorValue;
+      for (let i = 0; i < this.faces[prop].cubeData.length; i++) {
+        for (let j = 0; j < this.faces[prop].cubeData[i].length; j++) {
+          if (this.faces[prop].cubeData[i][j].colorValue !== colorVal) {
+            return false;
+          }
+        }
+      }
+    }
+    return true;
+  }
+
+  undoToPreviousSolve() {
+    const speed = 20;
+    const stepCount = 8;
+    const turnParams = this.stepsSinceLastSolved.slice().reverse().map((index) => this.rotationMethodParamsOpposites[index]);
+
+    let counter = 0;
+    const cb = () => {
+      if (counter < turnParams.length) {
+        this.rotateFace(turnParams[counter][0], turnParams[counter][1], stepCount, speed, cb);
+      }
+      counter++;
+    }
+    cb();
   }
 }
 
