@@ -362,7 +362,7 @@ class CubeData {
     Takes a 4x3 array of cube data. The color values in each will be shuffled down (values in row 0 -> row 1, row 1 -> row 2, ..., row 4 -> row 1).
   */
   rotateColorValues(cubeArray) {
-    let previousRow = cubeArray[cubeArray.length].map((cubeData) => cubeData.colorValue);
+    let previousRow = cubeArray[cubeArray.length - 1].map((cubeData) => cubeData.colorValue);
     let currentRow;
     for (let i = 0; i < cubeArray.length; i++) {
       currentRow = cubeArray[i];
@@ -406,10 +406,10 @@ class CubeData {
     this.rotateFaceRight(this.right);
 
     const cubesToRotate = [
-      [this.top[0][2], this.top[1][2], this.top[2][2]],
+      [this.back[0][2], this.back[1][2], this.back[2][2]],
+      [this.bottom[0][2], this.bottom[1][2], this.bottom[2][2]],
       [this.front[0][2], this.front[1][2], this.front[2][2]],
-      [this.bottom[0][2], this.front[1][2], this.front[2][2]],
-      [this.back[0][2], this.back[1][2], this.front[2][2]],
+      [this.top[0][2], this.top[1][2], this.top[2][2]],
     ];
 
     this.rotateColorValues(cubesToRotate);
@@ -424,90 +424,38 @@ class CubeData {
 
     this.rotateFaceLeft(this.right);
 
-    const front = [[undefined, undefined, undefined], [undefined, undefined, undefined], [undefined, undefined, undefined]];
+    const cubesToRotate = [
+      [this.top[0][2], this.top[1][2], this.top[2][2]],
+      [this.front[0][2], this.front[1][2], this.front[2][2]],
+      [this.bottom[0][2], this.bottom[1][2], this.bottom[2][2]],
+      [this.back[0][2], this.back[1][2], this.back[2][2]],
+    ];
 
-    front[0][2] = this.front[0][2].colorValue;
-    front[1][2] = this.front[1][2].colorValue;
-    front[2][2] = this.front[2][2].colorValue;
-    this.front[0][2].colorValue = this.top[0][2].colorValue
-    this.front[1][2].colorValue = this.top[1][2].colorValue
-    this.front[2][2].colorValue = this.top[2][2].colorValue
-
-    this.top[0][2].colorValue = this.back[0][2].colorValue
-    this.top[1][2].colorValue = this.back[1][2].colorValue
-    this.top[2][2].colorValue = this.back[2][2].colorValue
-
-    this.back[0][2].colorValue = this.bottom[0][2].colorValue
-    this.back[1][2].colorValue = this.bottom[1][2].colorValue
-    this.back[2][2].colorValue = this.bottom[2][2].colorValue
-    
-    this.bottom[0][2].colorValue = front[0][2]
-    this.bottom[1][2].colorValue = front[1][2]
-    this.bottom[2][2].colorValue = front[2][2]
+    this.rotateColorValues(cubesToRotate);
   
     this.rotateCubesOnAxis(this.getCubeArrayFromFace(this.right), 'x', 1);
   }
 
-  rotateFrontRight() {
+  rotateFront(direction) {
     if (this.isRotating) {
       return;
     }
+    const cubesToRotate = [
+      [this.top[2][0], this.top[2][1], this.top[2][2]],
+      [this.right[0][0], this.right[1][0], this.right[2][0]],
+      [this.bottom[0][2], this.bottom[0][1], this.bottom[0][0]],
+      [this.left[2][2], this.left[1][2], this.left[0][2]],
+    ];
 
-    this.rotateFaceRight(this.front);
-
-    const top = [[undefined, undefined, undefined], [undefined, undefined, undefined], [undefined, undefined, undefined]];
-    top[2][0] = this.top[2][0].colorValue;
-    top[2][1] = this.top[2][1].colorValue;
-    top[2][2] = this.top[2][2].colorValue;
-
-    this.top[2][0].colorValue = this.left[2][2].colorValue;
-    this.top[2][1].colorValue = this.left[1][2].colorValue;
-    this.top[2][2].colorValue = this.left[0][2].colorValue;
-
-    this.left[0][2].colorValue = this.bottom[0][0].colorValue;
-    this.left[1][2].colorValue = this.bottom[0][1].colorValue;
-    this.left[2][2].colorValue = this.bottom[0][2].colorValue;
-
-    this.bottom[0][0].colorValue = this.right[2][0].colorValue;
-    this.bottom[0][1].colorValue = this.right[1][0].colorValue;
-    this.bottom[0][2].colorValue = this.right[0][0].colorValue;
-
-    this.right[0][0].colorValue = top[2][0];
-    this.right[1][0].colorValue = top[2][1];
-    this.right[2][0].colorValue = top[2][2];
-  
-    this.rotateCubesOnAxis(this.getCubeArrayFromFace(this.front), 'z', -1);
-  }
-
-  rotateFrontLeft() {
-    if (this.isRotating) {
-      return;
+    if (direction === 1) {
+      this.rotateFaceRight(this.front);
+      this.rotateColorValues(cubesToRotate);
+      this.rotateCubesOnAxis(this.getCubeArrayFromFace(this.front), 'z', -1);
+    } else if (direction === -1) {
+      this.rotateFaceLeft(this.front);
+      this.rotateColorValues(cubesToRotate.reverse());
+      this.rotateCubesOnAxis(this.getCubeArrayFromFace(this.front), 'z', 1);
     }
-
-    this.rotateFaceRight(this.front);
-
-    const left = [[undefined, undefined, undefined], [undefined, undefined, undefined], [undefined, undefined, undefined]];
-    left[0][2] = this.left[0][2].colorValue;
-    left[1][2] = this.left[1][2].colorValue;
-    left[2][2] = this.left[2][2].colorValue;
-
-    this.left[2][2].colorValue = this.top[2][0].colorValue;
-    this.left[1][2].colorValue = this.top[2][1].colorValue;
-    this.left[0][2].colorValue = this.top[2][2].colorValue;
-
-    this.top[2][0].colorValue = this.right[0][0].colorValue;
-    this.top[2][1].colorValue = this.right[1][0].colorValue;
-    this.top[2][2].colorValue = this.right[2][0].colorValue;
-
-    this.right[2][0].colorValue = this.bottom[0][0].colorValue;
-    this.right[1][0].colorValue = this.bottom[0][1].colorValue;
-    this.right[0][0].colorValue = this.bottom[0][2].colorValue;
-
-    this.bottom[0][0].colorValue = left[0][2];
-    this.bottom[0][1].colorValue = left[1][2];
-    this.bottom[0][2].colorValue = left[2][2];
-  
-    this.rotateCubesOnAxis(this.getCubeArrayFromFace(this.front), 'z', 1);
   }
 }
 
@@ -517,5 +465,5 @@ cd.colorFaces();
 document.querySelector('#right-right-button').addEventListener('click', () => cd.rotateRightRight());
 document.querySelector('#right-left-button').addEventListener('click', () => cd.rotateRightLeft());
 
-document.querySelector('#front-left-button').addEventListener('click', () => cd.rotateFrontLeft());
-document.querySelector('#front-right-button').addEventListener('click', () => cd.rotateFrontRight());
+document.querySelector('#front-left-button').addEventListener('click', () => cd.rotateFront(-1));
+document.querySelector('#front-right-button').addEventListener('click', () => cd.rotateFront(1));
