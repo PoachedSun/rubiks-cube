@@ -11,6 +11,8 @@ const far = 20;
 const camera = new THREE.PerspectiveCamera(fov, aspect, near, far);
 
 camera.position.z = 15;
+const light = new THREE.DirectionalLight(0xffffff, 1);
+camera.add(light);
 
 const scene = new THREE.Scene();
 scene.background = new THREE.Color('cornflowerblue');

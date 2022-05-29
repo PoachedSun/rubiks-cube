@@ -98,25 +98,25 @@ export default class Cube {
     const cubes = this.generateCubes();
     cubes.forEach((cube) => {
       if (cube.position.y < 0) {
-        this.faces.bottom.cubeData[-cube.position.z + 1][cube.position.x + 1] = { cube, colorValue: 0 };
+        this.faces.bottom.cubeData[-cube.position.z + 1][cube.position.x + 1] = { cube, colorValue: 0, tile: this.createTile(0, -0.15, 0, cube) };
       } else if (cube.position.y > 0) {
-        this.faces.top.cubeData[cube.position.z + 1][cube.position.x + 1] = { cube, colorValue: 1 };
+        this.faces.top.cubeData[cube.position.z + 1][cube.position.x + 1] = { cube, colorValue: 1, tile: this.createTile(0, 0.15, 0, cube) };
       } else {
         this.faces.middleTopBottom.cubeData[cube.position.z + 1][cube.position.x + 1] = { cube };
       }
 
       if (cube.position.z < 0) {
-        this.faces.back.cubeData[cube.position.y + 1][cube.position.x + 1] = { cube, colorValue: 2 };
+        this.faces.back.cubeData[cube.position.y + 1][cube.position.x + 1] = { cube, colorValue: 2, tile: this.createTile(0, 0, -0.15, cube) };
       } else if (cube.position.z > 0) {
-        this.faces.front.cubeData[-cube.position.y + 1][cube.position.x + 1] = { cube, colorValue: 3 };
+        this.faces.front.cubeData[-cube.position.y + 1][cube.position.x + 1] = { cube, colorValue: 3, tile: this.createTile(0, 0, 0.15, cube)};
       } else {
         this.faces.middleFrontBack.cubeData[-cube.position.y + 1][cube.position.x + 1] = { cube }
       }
 
       if (cube.position.x < 0) {
-        this.faces.left.cubeData[-cube.position.y + 1][cube.position.z + 1] = { cube, colorValue: 4 };
+        this.faces.left.cubeData[-cube.position.y + 1][cube.position.z + 1] = { cube, colorValue: 4, tile: this.createTile(-0.15, 0, 0, cube) };
       } else if (cube.position.x > 0) {
-        this.faces.right.cubeData[-cube.position.y + 1][-cube.position.z + 1] = { cube, colorValue: 5 };
+        this.faces.right.cubeData[-cube.position.y + 1][-cube.position.z + 1] = { cube, colorValue: 5, tile: this.createTile(0.15, 0, 0, cube) };
       } else {
         this.faces.middleLeftRight.cubeData[-cube.position.y + 1][-cube.position.z + 1] = { cube };
       }
@@ -124,6 +124,16 @@ export default class Cube {
     this.addCubesToRotate();
     this.attachListeners();
     this.colorFaces();
+  }
+
+  createTile(x, y, z, cube) {
+    const geometry = new THREE.BoxGeometry(0.85, 0.85, 0.85);
+    const tile = new THREE.Mesh(geometry, this.materials[this.materials.length - 1]);
+    tile.position.x = x;
+    tile.position.y = y;
+    tile.position.z = z;
+    cube.add(tile);
+    return tile;
   }
 
   generateCubes() {
@@ -156,49 +166,13 @@ export default class Cube {
   }
 
   generateMaterials() {
-    const redMat = new THREE.MeshBasicMaterial({
-      color: 0xfc0f03,
-      polygonOffset: true,
-      polygonOffsetFactor: 1,
-      polygonOffsetUnits: 1,
-    });
-    const orangeMat = new THREE.MeshBasicMaterial({
-      color: 0xff6200,
-      polygonOffset: true,
-      polygonOffsetFactor: 1,
-      polygonOffsetUnits: 1,
-    });
-    const greenMat = new THREE.MeshBasicMaterial({
-      color: 0x0ba313,
-      polygonOffset: true,
-      polygonOffsetFactor: 1,
-      polygonOffsetUnits: 1,
-    });
-    const blueMat = new THREE.MeshBasicMaterial({
-      color: 0x0a0dbf,
-      polygonOffset: true,
-      polygonOffsetFactor: 1,
-      polygonOffsetUnits: 1,
-    });
-    const yellowMat = new THREE.MeshBasicMaterial({
-      color: 0xf8fc03,
-      polygonOffset: true,
-      polygonOffsetFactor: 1,
-      polygonOffsetUnits: 1,
-    });
-    const whiteMat = new THREE.MeshBasicMaterial({
-      color: 0xeeeeee,
-      polygonOffset: true,
-      polygonOffsetFactor: 1,
-      polygonOffsetUnits: 1,
-    });
-
-    const blackMat = new THREE.MeshBasicMaterial({
-      color: 0x000000,
-      polygonOffset: true,
-      polygonOffsetFactor: 1,
-      polygonOffsetUnits: 1,
-    });
+    const redMat = new THREE.MeshToonMaterial({ color: 0xfc0f03  });
+    const orangeMat = new THREE.MeshToonMaterial({ color: 0xff6200 });
+    const greenMat = new THREE.MeshToonMaterial({ color: 0x0ba313 });
+    const blueMat = new THREE.MeshToonMaterial({ color: 0x0a0dbf });
+    const yellowMat = new THREE.MeshToonMaterial({ color: 0xf8fc03 });
+    const whiteMat = new THREE.MeshToonMaterial({ color: 0xeeeeee });
+    const blackMat = new THREE.MeshToonMaterial({ color: 0x000000 });
     this.materials.push(...[
       orangeMat,
       redMat,
@@ -320,44 +294,15 @@ export default class Cube {
   }
 
   colorFaces () {
-    const MaterialOrder = {
-      RIGHT: 0,
-      LEFT: 1,
-      TOP: 2,
-      BOTTOM: 3,
-      FRONT: 4,
-      BACK: 5,
+    for (const key in this.faces) {
+      this.faces[key].cubeData.forEach((row) => {
+        row.forEach((cubeData) => {
+          if (cubeData.tile) {
+            cubeData.tile.material = this.materials[cubeData.colorValue];
+          }
+        });
+      });
     }
-    this.faces.front.cubeData.forEach((row) => {
-      row.forEach((cubeData) => {
-        cubeData.cube.material[MaterialOrder.FRONT] = this.materials[cubeData.colorValue];
-      });
-    });
-    this.faces.back.cubeData.forEach((row) => {
-      row.forEach((cubeData) => {
-        cubeData.cube.material[MaterialOrder.BACK] = this.materials[cubeData.colorValue];
-      });
-    });
-    this.faces.left.cubeData.forEach((row) => {
-      row.forEach((cubeData) => {
-        cubeData.cube.material[MaterialOrder.LEFT] = this.materials[cubeData.colorValue];
-      });
-    });
-    this.faces.right.cubeData.forEach((row) => {
-      row.forEach((cubeData) => {
-        cubeData.cube.material[MaterialOrder.RIGHT] = this.materials[cubeData.colorValue];
-      });
-    });
-    this.faces.top.cubeData.forEach((row) => {
-      row.forEach((cubeData) => {
-        cubeData.cube.material[MaterialOrder.TOP] = this.materials[cubeData.colorValue];
-      });
-    });
-    this.faces.bottom.cubeData.forEach((row) => {
-      row.forEach((cubeData) => {
-        cubeData.cube.material[MaterialOrder.BOTTOM] = this.materials[cubeData.colorValue];
-      });
-    });
   }
 
   /*
