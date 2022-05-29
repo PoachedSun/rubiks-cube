@@ -46,4 +46,4 @@ function render(time) {
   requestAnimationFrame(render);
 }
 
-const cd = new Cube(scene);
+const cd = new Cube(scene, camera);
