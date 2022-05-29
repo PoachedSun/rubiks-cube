@@ -154,7 +154,7 @@ export default class Cube {
       polygonOffsetUnits: 1,
     });
     const whiteMat = new THREE.MeshBasicMaterial({
-      color: 0xbbbbbb,
+      color: 0xeeeeee,
       polygonOffset: true,
       polygonOffsetFactor: 1,
       polygonOffsetUnits: 1,
@@ -488,5 +488,14 @@ export default class Cube {
       counter++;
     }
     cb();
+  }
+
+  pick(normalizedPosition, scene, camera) {
+    const raycaster = new THREE.Raycaster();
+    raycaster.setFromCamera(normalizedPosition, camera);
+    const intersectedObjects = raycaster.intersectObjects(scene.children);
+    if (intersectedObjects.length) {
+      pickedObject = intersectedObjects[0].object;
+    }
   }
 }
