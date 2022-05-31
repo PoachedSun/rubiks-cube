@@ -247,17 +247,19 @@ export default class Cube {
     const rect = canvas.getBoundingClientRect();
 
     canvas.addEventListener('mousedown', (event) => {
-     const obj = this.pick(
-        {
-          x: ((event.clientX - rect.left) / rect.width) * 2 - 1,
-          y: ((event.clientY - rect.top) / rect.height) * -2 + 1,
-        },
-        this.scene,
-        this.camera,
-      );
-      if (obj) {
-        this.originalPoint = obj.point;
-        this.pickedObject = obj.object;
+      if (event.buttons === 1) {
+        const obj = this.pick(
+          {
+            x: ((event.clientX - rect.left) / rect.width) * 2 - 1,
+            y: ((event.clientY - rect.top) / rect.height) * -2 + 1,
+          },
+          this.scene,
+          this.camera,
+        );
+        if (obj) {
+          this.originalPoint = obj.point;
+          this.pickedObject = obj.object;
+        }
       }
     });
     canvas.addEventListener('mouseup', () => {
