@@ -8,11 +8,11 @@ export default class Cube {
   isRotating = false;
   materials = [];
 
-  constructor(scene, camera) {
+  constructor(scene, camera, cubeSize) {
     this.scene = scene;
     this.camera = camera;
     this.cubes = [];
-    this.cubeSize = 3;
+    this.cubeSize = cubeSize;
     this.positions = [];
     for (let i = this.cubeSize - 1; i >= 0; i--) {
       this.positions.push(((this.cubeSize - 1) * 0.5) - i)

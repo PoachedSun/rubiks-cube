@@ -46,4 +46,17 @@ function render(time) {
   requestAnimationFrame(render);
 }
 
-const cd = new Cube(scene, camera);
+const selectCubeSize = document.querySelector('#select-cube-size');
+for (let i = 2; i < 7; i++) {
+  const option = document.createElement('option');
+  option.innerHTML = i;
+  selectCubeSize.appendChild(option);
+}
+
+selectCubeSize.addEventListener('change', () => {
+  console.log(selectCubeSize.value);
+})
+
+selectCubeSize.value = 3;
+
+const cube = new Cube(scene, camera, 3);
