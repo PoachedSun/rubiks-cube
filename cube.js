@@ -12,34 +12,42 @@ export default class Cube {
     this.scene = scene;
     this.camera = camera;
     this.cubes = [];
-    for (let i = 0; i < 3; i++) {
-      for (let j = 0; j < 3; j++) {
-        for (let k = 0; k < 3; k++) {
-          const cube = new ComponentCube(1 - k, 1 - i, 1 - j);
+    this.cubeSize = 3;
+    this.positions = [];
+    for (let i = this.cubeSize - 1; i >= 0; i--) {
+      this.positions.push(((this.cubeSize - 1) * 0.5) - i)
+    }
+    for (let i = 0; i < this.cubeSize; i++) {
+      for (let j = 0; j < this.cubeSize; j++) {
+        for (let k = 0; k < this.cubeSize; k++) {
+          const cube = new ComponentCube(this.positions[k], this.positions[i], this.positions[j]);
           scene.add(cube.cube);
           this.cubes.push(cube);
         }
       }
     }
 
-    this.faces = {
-      left: this.cubes.filter((cube) => cube.cube.position.x === -1),
-      middleLeftRight: this.cubes.filter((cube) => cube.cube.position.x === 0),
-      right: this.cubes.filter((cube) => cube.cube.position.x === 1),
-      bottom: this.cubes.filter((cube) => cube.cube.position.y === -1),
-      middleTopBottom: this.cubes.filter((cube) => cube.cube.position.y === 0),
-      top: this.cubes.filter((cube) => cube.cube.position.y === 1),
-      back: this.cubes.filter((cube) => cube.cube.position.z === -1),
-      middleFrontBack: this.cubes.filter((cube) => cube.cube.position.z === 0),
-      front: this.cubes.filter((cube) => cube.cube.position.z === 1),
+    this.xFaces = [];
+    this.yFaces = [];
+    this.zFaces = [];
+    for (let i = 0; i < this.positions.length; i++) {
+      this.xFaces.push(this.cubes.filter((cube) => cube.cube.position.x === this.positions[i]));
+      this.yFaces.push(this.cubes.filter((cube) => cube.cube.position.y === this.positions[i]));
+      this.zFaces.push(this.cubes.filter((cube) => cube.cube.position.z === this.positions[i]));
+    }
+    this.faces = [...this.xFaces, ...this.yFaces, ...this.zFaces];
+    this.namedFaces = {
+      left: this.xFaces[0],
+      right: this.xFaces[this.xFaces.length - 1],
+      bottom: this.yFaces[0],
+      top: this.yFaces[this.yFaces.length - 1],
+      back: this.zFaces[0],
+      front: this.zFaces[this.zFaces.length - 1],
     }
 
-    this.faces.left.forEach((cube) => cube.showFace('left'));
-    this.faces.right.forEach((cube) => cube.showFace('right'));
-    this.faces.bottom.forEach((cube) => cube.showFace('bottom'));
-    this.faces.top.forEach((cube) => cube.showFace('top'));
-    this.faces.back.forEach((cube) => cube.showFace('back'));
-    this.faces.front.forEach((cube) => cube.showFace('front'));
+    for (const key in this.namedFaces) {
+      this.namedFaces[key].forEach((cube) => cube.showFace(key));
+    }
 
     this.attachListeners();
   }
@@ -76,14 +84,14 @@ export default class Cube {
         }
         const faces = [];
         let tileFace;
-        for (const key in this.faces) {
-          if (this.isCubeInFace(this.pickedObject.parent, this.faces[key])) {
-            faces.push(this.faces[key]);
+        this.faces.forEach((face) => {
+          if (this.isCubeInFace(this.pickedObject.parent, face)) {
+            faces.push(face);
           }
-          if (this.isTileInFace(this.pickedObject, this.faces[key])) {
-            tileFace = this.faces[key];
+          if (this.isTileInFace(this.pickedObject, face)) {
+            tileFace = face;
           }
-        }
+        });
 
         const max = Math.max(Math.abs(change.x), Math.abs(change.y), Math.abs(change.z));
         for (const key in change) {
@@ -92,13 +100,13 @@ export default class Cube {
               if (this.getAxisFromFace(face) !== key && this.getAxisFromFace(face) !== this.getAxisFromFace(tileFace)) {
                 let direction = change[key] / Math.abs(change[key]);
                 if (
-                  (key === 'x' && (tileFace === this.faces.front || tileFace === this.faces.bottom)) ||
-                  (key === 'y' && (tileFace === this.faces.back || tileFace === this.faces.right)) ||
-                  (key === 'z' && (tileFace === this.faces.top || tileFace === this.faces.left))
+                  (key === 'x' && (tileFace === this.namedFaces.front || tileFace === this.namedFaces.bottom)) ||
+                  (key === 'y' && (tileFace === this.namedFaces.back || tileFace === this.namedFaces.right)) ||
+                  (key === 'z' && (tileFace === this.namedFaces.top || tileFace === this.namedFaces.left))
                 ) {
                   direction *= -1;
                 }
-                this.rotateFace(face, this.getAxisFromFace(face), direction);
+                this.rotateFace(face, direction);
               }
             });
           }
@@ -134,8 +142,8 @@ export default class Cube {
   }
 
   getFaceName(face) {
-    for (const key in this.faces) {
-      if (this.faces[key] === face) {
+    for (const key in this.namedFaces) {
+      if (this.namedFaces[key] === face) {
         return key;
       } 
     }
@@ -193,9 +201,11 @@ export default class Cube {
     }, speed);
   }
 
-  rotateFace(face, axis, direction, stepCount, speed, cb) {
+  rotateFace(face, direction, stepCount, speed, cb) {
     if (this.rotating) return;
     this.rotating = true;
+
+    const axis = this.getAxisFromFace(face);
 
     const callback = () => {
       this.rotating = false;
@@ -214,12 +224,19 @@ export default class Cube {
           axis3 = 'x';
           break;
       }
-      const colors = [[undefined, undefined, undefined], [undefined, undefined, undefined], [undefined, undefined, undefined]]
+      const colors = [];
+      for (let i = 0; i < this.cubeSize; i++) {
+        const row = [];
+        for (let j = 0; j < this.cubeSize; j++) {
+          row.push(undefined);
+        }
+        colors.push(row);
+      }
       face.forEach((cube) => {
-        colors[cube.cube.position[axis2] + 1][cube.cube.position[axis3] + 1] = cube.getColors();
+        colors[cube.cube.position[axis2] + (this.positions[0] * -1)][cube.cube.position[axis3] + (this.positions[0] * -1)] = cube.getColors();
       });
       face.forEach((cube) => {
-        cube.assignColors(colors[(cube.cube.position[axis3] * -1 * direction) + 1][(cube.cube.position[axis2] * direction) + 1]);
+        cube.assignColors(colors[(cube.cube.position[axis3] * -1 * direction) + (this.positions[0] * -1)][(cube.cube.position[axis2] * direction) + (this.positions[0] * -1)]);
         cube.rotate(axis, direction);
       });
 
@@ -228,7 +245,7 @@ export default class Cube {
         this.stepsSinceLastSolved = [];
       } else {
         document.querySelector('h5').hidden = true;
-        this.stepsSinceLastSolved.push({ face, axis, direction });
+        this.stepsSinceLastSolved.push({ face, direction });
       }
 
       if (cb !== undefined) {
@@ -240,31 +257,19 @@ export default class Cube {
   }
 
   rotateRandomFace(stepCount, speed, cb) {
-    const faceKeys = Object.keys(this.faces);
-
     const direction = Math.floor(Math.random() * 2) ? 1 : -1;
-    const face = this.faces[faceKeys[Math.floor(Math.random() * faceKeys.length)]];
+    const face = this.faces[Math.floor(Math.random() * this.faces.length)];
 
-    const axis = this.getAxisFromFace(face);
-    
-
-    this.rotateFace(face, axis, direction, stepCount, speed, cb);
+    this.rotateFace(face, direction, stepCount, speed, cb);
   }
 
   getAxisFromFace(face) {
-    switch (face) {
-      case this.faces.front:
-      case this.faces.middleFrontBack:
-      case this.faces.back:
-        return 'z';
-      case this.faces.left:
-      case this.faces.middleLeftRight:
-      case this.faces.right:
-        return 'x';
-      case this.faces.top:
-      case this.faces.middleTopBottom:
-      case this.faces.bottom:
-        return 'y';
+    if (this.xFaces.includes(face)) {
+      return 'x';
+    } else if (this.yFaces.includes(face)) {
+      return 'y';
+    } else if (this.zFaces.includes(face)) {
+      return 'z';
     }
   }
 
@@ -302,7 +307,7 @@ export default class Cube {
     let counter = 0;
     const cb = () => {
       if (counter < turnParams.length) {
-        this.rotateFace(turnParams[counter].face, turnParams[counter].axis, turnParams[counter].direction * -1, stepCount, speed, cb);
+        this.rotateFace(turnParams[counter].face, turnParams[counter].direction * -1, stepCount, speed, cb);
       }
       counter++;
     }
