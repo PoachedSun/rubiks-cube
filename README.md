@@ -1,1 +1,0 @@
-A rubiks cube, made with three.js. Try it out at https://poachedsun.github.io/rubiks-cube/.
