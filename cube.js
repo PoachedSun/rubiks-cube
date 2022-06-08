@@ -34,6 +34,13 @@ export default class Cube {
       front: this.cubes.filter((cube) => cube.cube.position.z === 1),
     }
 
+    this.faces.left.forEach((cube) => cube.showFace('left'));
+    this.faces.right.forEach((cube) => cube.showFace('right'));
+    this.faces.bottom.forEach((cube) => cube.showFace('bottom'));
+    this.faces.top.forEach((cube) => cube.showFace('top'));
+    this.faces.back.forEach((cube) => cube.showFace('back'));
+    this.faces.front.forEach((cube) => cube.showFace('front'));
+
     this.attachListeners();
   }
   

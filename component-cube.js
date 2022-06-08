@@ -106,8 +106,7 @@ export default class ComponentCube {
     tile.position.x = x;
     tile.position.y = y;
     tile.position.z = z;
-    this.cube.add(tile);
-    return { tile, colorValue: this.materials.length - 1};
+    return { tile, colorValue: this.materials.length - 1 };
   }
 
   containsTile(tile, faceName) {
@@ -136,12 +135,14 @@ export default class ComponentCube {
     }
   }
   assignColors(colors) {
-    this.faces.front.colorValue = colors.front;
-    this.faces.back.colorValue = colors.back;
-    this.faces.left.colorValue = colors.left;
-    this.faces.right.colorValue = colors.right;
-    this.faces.top.colorValue = colors.top;
-    this.faces.bottom.colorValue = colors.bottom;
+    for (const key in colors) {
+      this.faces[key].colorValue = colors[key];
+    }
+    this.colorFaces();
+  }
+
+  showFace(faceName) {
+    this.cube.add(this.faces[faceName].tile);
     this.colorFaces();
   }
 }
