@@ -8,9 +8,8 @@ export default class Cube {
   isRotating = false;
   materials = [];
 
-  constructor(scene, camera, cubeSize) {
-    this.scene = scene;
-    this.camera = camera;
+  constructor(cubeSize) {
+    this.cubeGroup = new THREE.Group();
     this.cubes = [];
     this.cubeSize = cubeSize;
     this.positions = [];
@@ -21,7 +20,7 @@ export default class Cube {
       for (let j = 0; j < this.cubeSize; j++) {
         for (let k = 0; k < this.cubeSize; k++) {
           const cube = new ComponentCube(this.positions[k], this.positions[i], this.positions[j]);
-          scene.add(cube.cube);
+          this.cubeGroup.add(cube.cube);
           this.cubes.push(cube);
         }
       }
@@ -48,92 +47,70 @@ export default class Cube {
     for (const key in this.namedFaces) {
       this.namedFaces[key].forEach((cube) => cube.showFace(key));
     }
-
-    this.attachListeners();
   }
   
-  attachListeners() {
-    document.querySelector('#scramble-button').addEventListener('click', () => this.scramble());
-    document.querySelector('#solve-button').addEventListener('click', () => this.undoToPreviousSolve());
-
-    const canvas = document.querySelector('canvas');
-    const rect = canvas.getBoundingClientRect();
-
-    canvas.addEventListener('mousedown', (event) => {
-      if (event.buttons === 1) {
-        const obj = this.pick(
-          {
-            x: ((event.clientX - rect.left) / rect.width) * 2 - 1,
-            y: ((event.clientY - rect.top) / rect.height) * -2 + 1,
-          },
-          this.scene,
-          this.camera,
-        );
-        if (obj) {
-          this.originalPoint = obj.point;
-          this.pickedObject = obj.object;
-        }
-      }
-    });
-    canvas.addEventListener('mouseup', () => {
-      if (this.originalPoint && this.currentPoint) {
-        const change = {
-          x: this.originalPoint.x - this.currentPoint.x,
-          y: this.originalPoint.y - this.currentPoint.y,
-          z: this.originalPoint.z - this.currentPoint.z,
-        }
-        const faces = [];
-        let tileFace;
-        this.faces.forEach((face) => {
-          if (this.isCubeInFace(this.pickedObject.parent, face)) {
-            faces.push(face);
-          }
-          if (this.isTileInFace(this.pickedObject, face)) {
-            tileFace = face;
-          }
-        });
-
-        const max = Math.max(Math.abs(change.x), Math.abs(change.y), Math.abs(change.z));
-        for (const key in change) {
-          if (max === Math.abs(change[key])) {
-            faces.forEach((face) => {
-              if (this.getAxisFromFace(face) !== key && this.getAxisFromFace(face) !== this.getAxisFromFace(tileFace)) {
-                let direction = change[key] / Math.abs(change[key]);
-                if (
-                  (key === 'x' && (tileFace === this.namedFaces.front || tileFace === this.namedFaces.bottom)) ||
-                  (key === 'y' && (tileFace === this.namedFaces.back || tileFace === this.namedFaces.right)) ||
-                  (key === 'z' && (tileFace === this.namedFaces.top || tileFace === this.namedFaces.left))
-                ) {
-                  direction *= -1;
-                }
-                this.rotateFace(face, direction);
-              }
-            });
-          }
-        }
-
-      }
-      this.pickedObject = undefined;
-      this.originalPoint = undefined;
-      this.currentPoint = undefined;
-    });
-    canvas.addEventListener('mousemove', (event) => {
-      if (!this.originalPoint) {
-        return;
-      }
-      const obj = this.pick(
-        {
-          x: ((event.clientX - rect.left) / rect.width) * 2 - 1,
-          y: ((event.clientY - rect.top) / rect.height) * -2 + 1,
-        },
-        this.scene,
-        this.camera,
-      );
-      if (obj !== undefined) {
-        this.currentPoint = obj.point
-      }
-    });
+  // Accepts normalized coordinates from the canvas (range from -1 to 1), as well as a camera for use in raycasting.
+  onLeftMouseDown(x, y, camera) {
+    const obj = this.pick({ x, y }, camera);
+    if (obj !== undefined) {
+      this.originalPoint = obj.point;
+      this.pickedObject = obj.object;
+    }
   }
+
+  onMouseUp() {
+    if (this.originalPoint && this.currentPoint) {
+      const change = {
+        x: this.originalPoint.x - this.currentPoint.x,
+        y: this.originalPoint.y - this.currentPoint.y,
+        z: this.originalPoint.z - this.currentPoint.z,
+      };
+      const faces = [];
+      let tileFace;
+      this.faces.forEach((face) => {
+        if (this.isCubeInFace(this.pickedObject.parent, face)) {
+          faces.push(face);
+        }
+        if (this.isTileInFace(this.pickedObject, face)) {
+          tileFace = face;
+        }
+      });
+
+      const max = Math.max(Math.abs(change.x), Math.abs(change.y), Math.abs(change.z));
+      for (const key in change) {
+        if (max === Math.abs(change[key])) {
+          faces.forEach((face) => {
+            if (this.getAxisFromFace(face) !== key && this.getAxisFromFace(face) !== this.getAxisFromFace(tileFace)) {
+              let direction = change[key] / Math.abs(change[key]);
+              if (
+                (key === 'x' && (tileFace === this.namedFaces.front || tileFace === this.namedFaces.bottom)) ||
+                (key === 'y' && (tileFace === this.namedFaces.back || tileFace === this.namedFaces.right)) ||
+                (key === 'z' && (tileFace === this.namedFaces.top || tileFace === this.namedFaces.left))
+              ) {
+                direction *= -1;
+              }
+              this.rotateFace(face, direction);
+            }
+          });
+        }
+      }
+    }
+    this.pickedObject = undefined;
+    this.originalPoint = undefined;
+    this.currentPoint = undefined;
+  }
+
+  // Accepts normalized coordinates from the canvas (range from -1 to 1), as well as a camera for use in raycasting.
+  onMouseMove(x, y, camera) {
+    if (!this.originalPoint) {
+      return;
+    }
+    const obj = this.pick({ x, y }, camera);
+    if (obj !== undefined) {
+      this.currentPoint = obj.point;
+    }
+  }
+
   isTileInFace(tile, face) {
     return !!face.find((cube) => cube.containsTile(tile, this.getFaceName(face)));
   }
@@ -147,12 +124,6 @@ export default class Cube {
         return key;
       } 
     }
-  }
-
-  removeFace(face) {
-    face.forEach((cube) => {
-      this.scene.remove(cube.cube);
-    });
   }
 
   /*
@@ -169,10 +140,10 @@ export default class Cube {
     speed = speed ? speed : 40;
     const newGroup = new THREE.Group();
     cubes.forEach((cube) => {
-      this.scene.remove(cube.cube);
+      this.cubeGroup.remove(cube.cube);
       newGroup.add(cube.cube);
     });
-    this.scene.add(newGroup);
+    this.cubeGroup.add(newGroup);
     let counter = 0;
     const interval = setInterval(() => {
       switch (axis) {
@@ -188,9 +159,9 @@ export default class Cube {
       }
       counter++;
       if (counter === stepCount) {
-        this.scene.remove(newGroup);
+        this.cubeGroup.remove(newGroup);
         cubes.forEach((cube) => {
-          this.scene.add(cube.cube);
+          this.cubeGroup.add(cube.cube);
         });
         clearInterval(interval);
         this.isRotating = false;
@@ -314,10 +285,10 @@ export default class Cube {
     cb();
   }
 
-  pick(normalizedPosition, scene, camera) {
+  pick(normalizedPosition, camera) {
     const raycaster = new THREE.Raycaster();
     raycaster.setFromCamera(normalizedPosition, camera);
-    const intersectedObjects = raycaster.intersectObjects(scene.children);
+    const intersectedObjects = raycaster.intersectObjects(this.cubeGroup.children);
     if (intersectedObjects.length) {
       return intersectedObjects[0];
     }
