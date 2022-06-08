@@ -1,93 +1,9 @@
+import ComponentCube from './component-cube.js';
 import * as THREE from './node_modules/three/build/three.module.js';
 
 export default class Cube {
-  faces = {
-    front: {
-      cubeData: [[undefined, undefined, undefined], [undefined, undefined, undefined], [undefined, undefined, undefined]],
-      rotationAxis: 'z',
-      directionMultiplier: -1,
-    },
-    middleFrontBack: {
-      cubeData: [[undefined, undefined, undefined], [undefined, undefined, undefined], [undefined, undefined, undefined]],
-      rotationAxis: 'z',
-      directionMultiplier: -1,
-    },
-    back: {
-      cubeData: [[undefined, undefined, undefined], [undefined, undefined, undefined], [undefined, undefined, undefined]],
-      rotationAxis: 'z',
-      directionMultiplier: 1,
-    },
-    top: {
-      cubeData: [[undefined, undefined, undefined], [undefined, undefined, undefined], [undefined, undefined, undefined]],
-      rotationAxis: 'y',
-      directionMultiplier: -1,
-    },
-    middleTopBottom: {
-      cubeData: [[undefined, undefined, undefined], [undefined, undefined, undefined], [undefined, undefined, undefined]],
-      rotationAxis: 'y',
-      directionMultiplier: -1,
-    },
-    bottom: {
-      cubeData: [[undefined, undefined, undefined], [undefined, undefined, undefined], [undefined, undefined, undefined]],
-      rotationAxis: 'y',
-      directionMultiplier: 1,
-    },
-    left: {
-      cubeData: [[undefined, undefined, undefined], [undefined, undefined, undefined], [undefined, undefined, undefined]],
-      rotationAxis: 'x',
-      directionMultiplier: 1,
-    },
-    middleLeftRight: {
-      cubeData: [[undefined, undefined, undefined], [undefined, undefined, undefined], [undefined, undefined, undefined]],
-      rotationAxis: 'x',
-      directionMultiplier: 1,
-    },
-    right: {
-      cubeData: [[undefined, undefined, undefined], [undefined, undefined, undefined], [undefined, undefined, undefined]],
-      rotationAxis: 'x',
-      directionMultiplier: -1,
-    },
-  }
-  rotationMethodParams = [
-    [this.faces.left, -1],
-    [this.faces.left, 1],
-    [this.faces.right, -1],
-    [this.faces.right, 1],
-    [this.faces.front, -1],
-    [this.faces.front, 1],
-    [this.faces.back, -1],
-    [this.faces.back, 1],
-    [this.faces.top, -1],
-    [this.faces.top, 1],
-    [this.faces.bottom, -1],
-    [this.faces.bottom, 1],
-    [this.faces.middleLeftRight, -1],
-    [this.faces.middleLeftRight, 1],
-    [this.faces.middleTopBottom, -1],
-    [this.faces.middleTopBottom, 1],
-    [this.faces.middleFrontBack, -1],
-    [this.faces.middleFrontBack, 1],
-  ];
-  rotationMethodParamsOpposites = [
-    [this.faces.left, 1],
-    [this.faces.left, -1],
-    [this.faces.right, 1],
-    [this.faces.right, -1],
-    [this.faces.front, 1],
-    [this.faces.front, -1],
-    [this.faces.back, 1],
-    [this.faces.back, -1],
-    [this.faces.top, 1],
-    [this.faces.top, -1],
-    [this.faces.bottom, 1],
-    [this.faces.bottom, -1],
-    [this.faces.middleLeftRight, 1],
-    [this.faces.middleLeftRight, -1],
-    [this.faces.middleTopBottom, 1],
-    [this.faces.middleTopBottom, -1],
-    [this.faces.middleFrontBack, 1],
-    [this.faces.middleFrontBack, -1],
-  ];
+  faces = {};
+
   stepsSinceLastSolved = [];
   isRotating = false;
   materials = [];
@@ -95,148 +11,30 @@ export default class Cube {
   constructor(scene, camera) {
     this.scene = scene;
     this.camera = camera;
-    this.generateMaterials();
-    const cubes = this.generateCubes();
-    cubes.forEach((cube) => {
-      if (cube.position.y < 0) {
-        this.faces.bottom.cubeData[-cube.position.z + 1][cube.position.x + 1] = { cube, colorValue: 0, tile: this.createTile(0, -0.15, 0, cube) };
-      } else if (cube.position.y > 0) {
-        this.faces.top.cubeData[cube.position.z + 1][cube.position.x + 1] = { cube, colorValue: 1, tile: this.createTile(0, 0.15, 0, cube) };
-      } else {
-        this.faces.middleTopBottom.cubeData[cube.position.z + 1][cube.position.x + 1] = { cube };
-      }
-
-      if (cube.position.z < 0) {
-        this.faces.back.cubeData[cube.position.y + 1][cube.position.x + 1] = { cube, colorValue: 2, tile: this.createTile(0, 0, -0.15, cube) };
-      } else if (cube.position.z > 0) {
-        this.faces.front.cubeData[-cube.position.y + 1][cube.position.x + 1] = { cube, colorValue: 3, tile: this.createTile(0, 0, 0.15, cube)};
-      } else {
-        this.faces.middleFrontBack.cubeData[-cube.position.y + 1][cube.position.x + 1] = { cube }
-      }
-
-      if (cube.position.x < 0) {
-        this.faces.left.cubeData[-cube.position.y + 1][cube.position.z + 1] = { cube, colorValue: 4, tile: this.createTile(-0.15, 0, 0, cube) };
-      } else if (cube.position.x > 0) {
-        this.faces.right.cubeData[-cube.position.y + 1][-cube.position.z + 1] = { cube, colorValue: 5, tile: this.createTile(0.15, 0, 0, cube) };
-      } else {
-        this.faces.middleLeftRight.cubeData[-cube.position.y + 1][-cube.position.z + 1] = { cube };
-      }
-    });
-    this.addCubesToRotate();
-    this.attachListeners();
-    this.colorFaces();
-  }
-
-  createTile(x, y, z, cube) {
-    const geometry = new THREE.BoxGeometry(0.85, 0.85, 0.85);
-    const tile = new THREE.Mesh(geometry, this.materials[this.materials.length - 1]);
-    tile.position.x = x;
-    tile.position.y = y;
-    tile.position.z = z;
-    cube.add(tile);
-    return tile;
-  }
-
-  generateCubes() {
-    const cubes = [];
+    this.cubes = [];
     for (let i = 0; i < 3; i++) {
       for (let j = 0; j < 3; j++) {
         for (let k = 0; k < 3; k++) {
-          const boxWidth = 1;
-          const boxHeight = 1;
-          const boxDepth = 1;
-          const geometry = new THREE.BoxGeometry(boxWidth, boxHeight, boxDepth);
-          const blackMat = this.materials[this.materials.length - 1];
-          const defaultMaterials = [blackMat, blackMat, blackMat, blackMat, blackMat, blackMat];
-          const cube = new THREE.Mesh(geometry, defaultMaterials);
-          cube.position.y = (1 - i) * boxHeight;
-          cube.position.z = (1 - j) * boxDepth;
-          cube.position.x = (1 - k) * boxWidth;
-    
-          this.scene.add(cube);
-          cubes.push(cube);
+          const cube = new ComponentCube(1 - k, 1 - i, 1 - j);
+          scene.add(cube.cube);
+          this.cubes.push(cube);
         }
       }
     }
-    return cubes;
-  }
 
-  generateMaterials() {
-    const redMat = new THREE.MeshToonMaterial({ color: 0xfc0f03  });
-    const orangeMat = new THREE.MeshToonMaterial({ color: 0xff6200 });
-    const greenMat = new THREE.MeshToonMaterial({ color: 0x0ba313 });
-    const blueMat = new THREE.MeshToonMaterial({ color: 0x0a0dbf });
-    const yellowMat = new THREE.MeshToonMaterial({ color: 0xf8fc03 });
-    const whiteMat = new THREE.MeshToonMaterial({ color: 0xeeeeee });
-    const blackMat = new THREE.MeshToonMaterial({ color: 0x000000 });
-    this.materials.push(...[
-      orangeMat,
-      redMat,
-      blueMat,
-      greenMat,
-      yellowMat,
-      whiteMat,
-      blackMat,
-    ]);
-  }
+    this.faces = {
+      left: this.cubes.filter((cube) => cube.cube.position.x === -1),
+      middleLeftRight: this.cubes.filter((cube) => cube.cube.position.x === 0),
+      right: this.cubes.filter((cube) => cube.cube.position.x === 1),
+      bottom: this.cubes.filter((cube) => cube.cube.position.y === -1),
+      middleTopBottom: this.cubes.filter((cube) => cube.cube.position.y === 0),
+      top: this.cubes.filter((cube) => cube.cube.position.y === 1),
+      back: this.cubes.filter((cube) => cube.cube.position.z === -1),
+      middleFrontBack: this.cubes.filter((cube) => cube.cube.position.z === 0),
+      front: this.cubes.filter((cube) => cube.cube.position.z === 1),
+    }
 
-  addCubesToRotate() {
-    this.faces.front.cubesToRotate = [
-      [this.faces.top.cubeData[2][0], this.faces.top.cubeData[2][1], this.faces.top.cubeData[2][2]],
-      [this.faces.right.cubeData[0][0], this.faces.right.cubeData[1][0], this.faces.right.cubeData[2][0]],
-      [this.faces.bottom.cubeData[0][2], this.faces.bottom.cubeData[0][1], this.faces.bottom.cubeData[0][0]],
-      [this.faces.left.cubeData[2][2], this.faces.left.cubeData[1][2], this.faces.left.cubeData[0][2]],
-    ];
-    this.faces.middleFrontBack.cubesToRotate = [
-      [this.faces.top.cubeData[1][0], this.faces.top.cubeData[1][1], this.faces.top.cubeData[1][2]],
-      [this.faces.right.cubeData[0][1], this.faces.right.cubeData[1][1], this.faces.right.cubeData[2][1]],
-      [this.faces.bottom.cubeData[1][2], this.faces.bottom.cubeData[1][1], this.faces.bottom.cubeData[1][0]],
-      [this.faces.left.cubeData[2][1], this.faces.left.cubeData[1][1], this.faces.left.cubeData[0][1]],
-    ];
-    this.faces.back.cubesToRotate = [
-      [this.faces.top.cubeData[0][2], this.faces.top.cubeData[0][1], this.faces.top.cubeData[0][0]],
-      [this.faces.left.cubeData[0][0], this.faces.left.cubeData[1][0], this.faces.left.cubeData[2][0]],
-      [this.faces.bottom.cubeData[2][0], this.faces.bottom.cubeData[2][1], this.faces.bottom.cubeData[2][2]],
-      [this.faces.right.cubeData[2][2], this.faces.right.cubeData[1][2], this.faces.right.cubeData[0][2]],
-    ];
-
-    this.faces.left.cubesToRotate = [
-      [this.faces.top.cubeData[0][0], this.faces.top.cubeData[1][0], this.faces.top.cubeData[2][0]],
-      [this.faces.front.cubeData[0][0], this.faces.front.cubeData[1][0], this.faces.front.cubeData[2][0]],
-      [this.faces.bottom.cubeData[0][0], this.faces.bottom.cubeData[1][0], this.faces.bottom.cubeData[2][0]],
-      [this.faces.back.cubeData[0][0], this.faces.back.cubeData[1][0], this.faces.back.cubeData[2][0]],
-    ];
-    this.faces.middleLeftRight.cubesToRotate = [
-      [this.faces.top.cubeData[2][1], this.faces.top.cubeData[1][1], this.faces.top.cubeData[0][1]],
-      [this.faces.front.cubeData[2][1], this.faces.front.cubeData[1][1], this.faces.front.cubeData[0][1]],
-      [this.faces.bottom.cubeData[2][1], this.faces.bottom.cubeData[1][1], this.faces.bottom.cubeData[0][1]],
-      [this.faces.back.cubeData[2][1], this.faces.back.cubeData[1][1], this.faces.back.cubeData[0][1]],
-    ];
-    this.faces.right.cubesToRotate = [
-      [this.faces.top.cubeData[0][2], this.faces.top.cubeData[1][2], this.faces.top.cubeData[2][2]],
-      [this.faces.back.cubeData[0][2], this.faces.back.cubeData[1][2], this.faces.back.cubeData[2][2]],
-      [this.faces.bottom.cubeData[0][2], this.faces.bottom.cubeData[1][2], this.faces.bottom.cubeData[2][2]],
-      [this.faces.front.cubeData[0][2], this.faces.front.cubeData[1][2], this.faces.front.cubeData[2][2]],
-    ]
-
-    this.faces.top.cubesToRotate = [
-      [this.faces.front.cubeData[0][2], this.faces.front.cubeData[0][1], this.faces.front.cubeData[0][0]],
-      [this.faces.left.cubeData[0][2], this.faces.left.cubeData[0][1], this.faces.left.cubeData[0][0]],
-      [this.faces.back.cubeData[2][0], this.faces.back.cubeData[2][1], this.faces.back.cubeData[2][2]],
-      [this.faces.right.cubeData[0][2], this.faces.right.cubeData[0][1], this.faces.right.cubeData[0][0]],
-    ]
-    this.faces.middleTopBottom.cubesToRotate = [
-      [this.faces.front.cubeData[1][0], this.faces.front.cubeData[1][1], this.faces.front.cubeData[1][2]],
-      [this.faces.left.cubeData[1][0], this.faces.left.cubeData[1][1], this.faces.left.cubeData[1][2]],
-      [this.faces.back.cubeData[1][2], this.faces.back.cubeData[1][1], this.faces.back.cubeData[1][0]],
-      [this.faces.right.cubeData[1][0], this.faces.right.cubeData[1][1], this.faces.right.cubeData[1][2]],
-    ]
-    this.faces.bottom.cubesToRotate = [
-      [this.faces.front.cubeData[2][0], this.faces.front.cubeData[2][1], this.faces.front.cubeData[2][2]],
-      [this.faces.right.cubeData[2][0], this.faces.right.cubeData[2][1], this.faces.right.cubeData[2][2]],
-      [this.faces.back.cubeData[0][2], this.faces.back.cubeData[0][1], this.faces.back.cubeData[0][0]],
-      [this.faces.left.cubeData[2][0], this.faces.left.cubeData[2][1], this.faces.left.cubeData[2][2]],
-    ]
+    this.attachListeners();
   }
   
   attachListeners() {
@@ -273,7 +71,7 @@ export default class Cube {
         let tileFace;
         for (const key in this.faces) {
           if (this.isCubeInFace(this.pickedObject.parent, this.faces[key])) {
-            faces.push({ face: this.faces[key], key });
+            faces.push(this.faces[key]);
           }
           if (this.isTileInFace(this.pickedObject, this.faces[key])) {
             tileFace = this.faces[key];
@@ -284,7 +82,7 @@ export default class Cube {
         for (const key in change) {
           if (max === Math.abs(change[key])) {
             faces.forEach((face) => {
-              if (face.face.rotationAxis !== key && face.face.rotationAxis !== tileFace.rotationAxis) {
+              if (this.getAxisFromFace(face) !== key && this.getAxisFromFace(face) !== this.getAxisFromFace(tileFace)) {
                 let direction = change[key] / Math.abs(change[key]);
                 if (
                   (key === 'x' && (tileFace === this.faces.front || tileFace === this.faces.bottom)) ||
@@ -293,7 +91,7 @@ export default class Cube {
                 ) {
                   direction *= -1;
                 }
-                this.rotateFace(face.face, direction * face.face.directionMultiplier);
+                this.rotateFace(face, this.getAxisFromFace(face), direction);
               }
             });
           }
@@ -321,42 +119,25 @@ export default class Cube {
       }
     });
   }
-
   isTileInFace(tile, face) {
-    return !!face.cubeData.find((row) => !!row.find((data) => data.tile === tile));
+    return !!face.find((cube) => cube.containsTile(tile, this.getFaceName(face)));
   }
   isCubeInFace(cube, face) {
-    return !!face.cubeData.find((row) => !!row.find((data) => data.cube === cube));
+    return !!face.find((c) => c.cube === cube);
+  }
+
+  getFaceName(face) {
+    for (const key in this.faces) {
+      if (this.faces[key] === face) {
+        return key;
+      } 
+    }
   }
 
   removeFace(face) {
-    face.forEach((row) => {
-      row.forEach((cubeData) => {
-        this.scene.remove(cubeData.cube);
-      });
+    face.forEach((cube) => {
+      this.scene.remove(cube.cube);
     });
-  }
-
-  getCubeArrayFromFace(face) {
-    const cubeArray = [];
-    face.forEach((row) => {
-      row.forEach((cubeData) => {
-        cubeArray.push(cubeData.cube);
-      });
-    });
-    return cubeArray;
-  }
-
-  colorFaces () {
-    for (const key in this.faces) {
-      this.faces[key].cubeData.forEach((row) => {
-        row.forEach((cubeData) => {
-          if (cubeData.tile) {
-            cubeData.tile.material = this.materials[cubeData.colorValue];
-          }
-        });
-      });
-    }
   }
 
   /*
@@ -373,8 +154,8 @@ export default class Cube {
     speed = speed ? speed : 40;
     const newGroup = new THREE.Group();
     cubes.forEach((cube) => {
-      this.scene.remove(cube);
-      newGroup.add(cube);
+      this.scene.remove(cube.cube);
+      newGroup.add(cube.cube);
     });
     this.scene.add(newGroup);
     let counter = 0;
@@ -394,11 +175,10 @@ export default class Cube {
       if (counter === stepCount) {
         this.scene.remove(newGroup);
         cubes.forEach((cube) => {
-          this.scene.add(cube);
+          this.scene.add(cube.cube);
         });
         clearInterval(interval);
         this.isRotating = false;
-        this.colorFaces();
         if (cb) {
           cb();
         }
@@ -406,104 +186,79 @@ export default class Cube {
     }, speed);
   }
 
-  rotateFaceRight(face) {
-    const colorValues = [[undefined, undefined, undefined], [undefined, undefined, undefined], [undefined, undefined, undefined]];
+  rotateFace(face, axis, direction, stepCount, speed, cb) {
+    if (this.rotating) return;
+    this.rotating = true;
 
-    colorValues[2][0] = face[2][0].colorValue;
-    colorValues[1][0] = face[1][0].colorValue;
-    colorValues[0][0] = face[0][0].colorValue;
-    colorValues[2][1] = face[2][1].colorValue;
-    colorValues[1][1] = face[1][1].colorValue;
-    colorValues[0][1] = face[0][1].colorValue;
-    colorValues[2][2] = face[2][2].colorValue;
-    colorValues[1][2] = face[1][2].colorValue;
-    colorValues[0][2] = face[0][2].colorValue;
+    const callback = () => {
+      this.rotating = false;
+      let axis2, axis3
+      switch (axis) {
+        case 'x':
+          axis2 = 'z';
+          axis3 = 'y';
+          break;
+        case 'y':
+          axis2 = 'x';
+          axis3 = 'z';
+          break;
+        case 'z':
+          axis2 = 'y';
+          axis3 = 'x';
+          break;
+      }
+      const colors = [[undefined, undefined, undefined], [undefined, undefined, undefined], [undefined, undefined, undefined]]
+      face.forEach((cube) => {
+        colors[cube.cube.position[axis2] + 1][cube.cube.position[axis3] + 1] = cube.getColors();
+      });
+      face.forEach((cube) => {
+        cube.assignColors(colors[(cube.cube.position[axis3] * -1 * direction) + 1][(cube.cube.position[axis2] * direction) + 1]);
+        cube.rotate(axis, direction);
+      });
 
-    face[0][0].colorValue = colorValues[2][0];
-    face[0][1].colorValue = colorValues[1][0];
-    face[0][2].colorValue = colorValues[0][0];
-    face[1][0].colorValue = colorValues[2][1];
-    face[1][1].colorValue = colorValues[1][1];
-    face[1][2].colorValue = colorValues[0][1];
-    face[2][0].colorValue = colorValues[2][2];
-    face[2][1].colorValue = colorValues[1][2];
-    face[2][2].colorValue = colorValues[0][2];
-  }
+      if (this.isSolved()) {
+        document.querySelector('h5').hidden = false;
+        this.stepsSinceLastSolved = [];
+      } else {
+        document.querySelector('h5').hidden = true;
+        this.stepsSinceLastSolved.push({ face, axis, direction });
+      }
 
-  /*
-    Takes a 4x3 array of cube data. The color values in each will be shuffled down (values in row 0 -> row 1, row 1 -> row 2, ..., row 4 -> row 1).
-  */
-  rotateColorValues(cubeArray) {
-    let previousRow = cubeArray[cubeArray.length - 1].map((cubeData) => cubeData.colorValue);
-    let currentRow;
-    for (let i = 0; i < cubeArray.length; i++) {
-      currentRow = cubeArray[i];
-      const temp = previousRow;
-      previousRow = currentRow.map((cubeData) => cubeData.colorValue);
-      for (let j = 0; j < cubeArray[i].length; j++) {
-        cubeArray[i][j].colorValue = temp[j];
+      if (cb !== undefined) {
+        cb();
       }
     }
-  }
-
-  rotateFaceLeft(face) { 
-    const colorValues = [[undefined, undefined, undefined], [undefined, undefined, undefined], [undefined, undefined, undefined]];
-
-    colorValues[2][0] = face[2][0].colorValue;
-    colorValues[1][0] = face[1][0].colorValue;
-    colorValues[0][0] = face[0][0].colorValue;
-    colorValues[2][1] = face[2][1].colorValue;
-    colorValues[1][1] = face[1][1].colorValue;
-    colorValues[0][1] = face[0][1].colorValue;
-    colorValues[2][2] = face[2][2].colorValue;
-    colorValues[1][2] = face[1][2].colorValue;
-    colorValues[0][2] = face[0][2].colorValue;
-
-    face[2][0].colorValue = colorValues[0][0];
-    face[1][0].colorValue = colorValues[0][1];
-    face[0][0].colorValue = colorValues[0][2];
-    face[2][1].colorValue = colorValues[1][0];
-    face[1][1].colorValue = colorValues[1][1];
-    face[0][1].colorValue = colorValues[1][2];
-    face[2][2].colorValue = colorValues[2][0];
-    face[1][2].colorValue = colorValues[2][1];
-    face[0][2].colorValue = colorValues[2][2];
-  }
-
-  rotateFace(face, direction, stepCount, speed, cb) {
-    if (this.isRotating) {
-      return;
-    }
-
-    const cubesToRotate = face.cubesToRotate.slice();
-    if (direction === 1) {
-      // If no color is specified, it's one of the middle rows.
-      if (face.cubeData[0][0].colorValue !== undefined) this.rotateFaceRight(face.cubeData);
-    } else if (direction === -1) {
-      if (face.cubeData[0][0].colorValue !== undefined) this.rotateFaceLeft(face.cubeData);
-      cubesToRotate.reverse();
-    }
-
-    this.rotateColorValues(cubesToRotate);
-    this.rotateCubesOnAxis(this.getCubeArrayFromFace(face.cubeData), face.rotationAxis, direction * face.directionMultiplier, stepCount, speed, cb);
-
-
-    if (this.isSolved()) {
-      document.querySelector('h5').hidden = false;
-      this.stepsSinceLastSolved = [];
-    } else {
-      document.querySelector('h5').hidden = true;
-      this.stepsSinceLastSolved.push(this.rotationMethodParams.findIndex((params) => params[0] === face && params[1] === direction));
-    }
-  }
-
-  getRandomRotationParams() {
-    return this.rotationMethodParams[Math.floor(Math.random() * this.rotationMethodParams.length)];
+    this.rotateCubesOnAxis(face, axis, direction, stepCount, speed, callback);
+    
   }
 
   rotateRandomFace(stepCount, speed, cb) {
-    const rotationParams = this.getRandomRotationParams();
-    this.rotateFace(rotationParams[0], rotationParams[1], stepCount, speed, cb);
+    const faceKeys = Object.keys(this.faces);
+
+    const direction = Math.floor(Math.random() * 2) ? 1 : -1;
+    const face = this.faces[faceKeys[Math.floor(Math.random() * faceKeys.length)]];
+
+    const axis = this.getAxisFromFace(face);
+    
+
+    this.rotateFace(face, axis, direction, stepCount, speed, cb);
+  }
+
+  getAxisFromFace(face) {
+    switch (face) {
+      case this.faces.front:
+      case this.faces.middleFrontBack:
+      case this.faces.back:
+        return 'z';
+      case this.faces.left:
+      case this.faces.middleLeftRight:
+      case this.faces.right:
+        return 'x';
+      case this.faces.top:
+      case this.faces.middleTopBottom:
+      case this.faces.bottom:
+        return 'y';
+    }
   }
 
   scramble() {
@@ -518,20 +273,15 @@ export default class Cube {
         this.rotateRandomFace(stepCount, speed, cb);
       }
     }
-    const rotationParams = this.getRandomRotationParams();
-    this.rotateFace(rotationParams[0], rotationParams[1], stepCount, speed, cb);
+    this.rotateRandomFace(stepCount, speed, cb);
   }
 
   /* Checks if each cube on each face has the same color. */
   isSolved() {
-    for (const prop in this.faces) {
-      let colorVal = this.faces[prop].cubeData[0][0].colorValue;
-      for (let i = 0; i < this.faces[prop].cubeData.length; i++) {
-        for (let j = 0; j < this.faces[prop].cubeData[i].length; j++) {
-          if (this.faces[prop].cubeData[i][j].colorValue !== colorVal) {
-            return false;
-          }
-        }
+    const colors = JSON.stringify(this.cubes[0].getColors());
+    for (let i = 0; i < this.cubes.length; i++) {
+      if (JSON.stringify(this.cubes[i].getColors()) !== colors) {
+        return false;
       }
     }
     return true;
@@ -540,12 +290,12 @@ export default class Cube {
   undoToPreviousSolve() {
     const speed = 20;
     const stepCount = 8;
-    const turnParams = this.stepsSinceLastSolved.slice().reverse().map((index) => this.rotationMethodParamsOpposites[index]);
+    const turnParams = this.stepsSinceLastSolved.slice().reverse();
 
     let counter = 0;
     const cb = () => {
       if (counter < turnParams.length) {
-        this.rotateFace(turnParams[counter][0], turnParams[counter][1], stepCount, speed, cb);
+        this.rotateFace(turnParams[counter].face, turnParams[counter].axis, turnParams[counter].direction * -1, stepCount, speed, cb);
       }
       counter++;
     }
